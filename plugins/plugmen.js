@@ -36,8 +36,8 @@ const minutes = Math.floor((uptime % 3600) / 60); // Calculate minutes
 const seconds = Math.floor(uptime % 60); // Calculate seconds
 
 // Uptime
-const uptimeMessage = `I am alive now since ${day}d ${hours}h ${minutes}m ${seconds}s`;
-const runMessage = `☀️ ${day} Day\n🕐 ${hours} Hour\n⏰ ${minutes} Minutes\n⏱️ ${seconds} Seconds`;
+const uptimeMessage = `*I am alive now since ${day}d ${hours}h ${minutes}m ${seconds}s*`;
+const runMessage = `*☀️ ${day} Day*\n*🕐 ${hours} Hour*\n*⏰ ${minutes} Minutes*\n*⏱️ ${seconds} Seconds*\n`;
 
 const xtime = moment.tz("Asia/Colombo").format("HH:mm:ss");
 const xdate = moment.tz("Asia/Colombo").format("DD/MM/YYYY");
@@ -45,98 +45,113 @@ const time2 = moment().tz("Asia/Colombo").format("HH:mm:ss");
 let pushwish = "";
 
 if (time2 < "05:00:00") {
-  pushwish = 'Good Morning 🌄';
+  pushwish = `Good Morning 🌄`;
 } else if (time2 < "11:00:00") {
-  pushwish = 'Good Morning 🌄';
+  pushwish = `Good Morning 🌄`;
 } else if (time2 < "15:00:00") {
-  pushwish = 'Good Afternoon 🌅';
+  pushwish = `Good Afternoon 🌅`;
 } else if (time2 < "18:00:00") {
-  pushwish = 'Good Evening 🌃';
+  pushwish = `Good Evening 🌃`;
 } else if (time2 < "19:00:00") {
-  pushwish = 'Good Evening 🌃';
+  pushwish = `Good Evening 🌃`;
 } else {
-  pushwish = 'Good Night 🌌';
+  pushwish = `Good Night 🌌`;
 }
 
-// Main Menu function
-const sendMenu = async (m, Matrix) => {
-  const mainMenu = `
-╭━━━〔 ${config.BOT_NAME} 〕━━━┈⊷
+const menu = async (m, Matrix) => {
+  const prefix = config.PREFIX;
+  const cmd = m.body.startsWith(prefix) ? m.body.slice(prefix.length).split(' ')[0].toLowerCase() : '';
+  const mode = config.MODE === 'public' ? 'public' : 'private';
+  const pref = config.PREFIX;
+
+  const validCommands = ['list', 'help', 'menu'];
+
+  if (validCommands.includes(cmd)) {
+    const mainMenu = `
+╭━━━〔 *${config.BOT_NAME}* 〕━━━┈⊷
 ┃★╭──────────────
-┃★│ Owner : ${config.OWNER_NAME}
-┃★│ User : ${m.pushName}
-┃★│ Baileys : Multi Device
-┃★│ Type : NodeJs
-┃★│ Mode : ${config.MODE === 'public' ? 'public' : 'private'}
-┃★│ Platform : ${os.platform()}
-┃★│ Prefix : [No Prefix]
-┃★│ Version : 3.1.0
+┃★│ Owner : *${config.OWNER_NAME}*
+┃★│ User : *${m.pushName}*
+┃★│ Baileys : *Multi Device*
+┃★│ Type : *NodeJs*
+┃★│ Mode : *${mode}*
+┃★│ Platform : *${os.platform()}*
+┃★│ Prefix : [${prefix}]
+┃★│ Version : *3.1.0*
 ┃★╰──────────────
 ╰━━━━━━━━━━━━━━━┈⊷
 
-> ${pushwish} ${m.pushName}!
+> ${pushwish} *${m.pushName}*!
 
-╭━━〔 Menu List 〕━━┈⊷
+╭━━〔 *Menu List* 〕━━┈⊷
 ┃◈╭─────────────·๏
-┃◈┃• 1. Download Menu
-┃◈┃• 2. Converter Menu
-┃◈┃• 3. AI Menu
-┃◈┃• 4. Tools Menu
-┃◈┃• 5. Group Menu
-┃◈┃• 6. Search Menu
+┃◈┃• 1. Download Menu      
+┃◈┃• 2. Converter Menu        
+┃◈┃• 3. AI Menu  
+┃◈┃• 4. Tools Menu  
+┃◈┃• 5. Group Menu 
+┃◈┃• 6. Search Menu   
 ┃◈┃• 7. Main Menu
-┃◈┃• 8. Owner Menu
-┃◈┃• 9. Stalk Menu
-┃◈┃•10. update
+┃◈┃• 8. Owner Menu 
+┃◈┃• 9. Stalk Menu     
+┃◈┃• update
 ┃◈└───────────┈⊷
 ╰──────────────┈⊷
+> *Reply with the number (1-9)*`;
 
-> Reply with the number (1-9)`;
+    // Function to get menu image (now using the URL provided)
+    const getMenuImage = async () => {
+      const imageUrl = 'https://files.catbox.moe/7jt69h.jpg';
+      try {
+        const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+        return Buffer.from(response.data, 'binary');
+      } catch (error) {
+        console.error('Error fetching menu image from URL:', error);
+        // Fallback to a local image in case the URL fails
+        return fs.readFileSync('./media/khan.jpg');
+      }
+    };
 
-  const menuImage = 'https://files.catbox.moe/7jt69h.jpg';  // Image URL
+    const menuImage = await getMenuImage();
 
-  // Send the main menu with image
-  const sentMessage = await Matrix.sendMessage(m.from, {
-    image: menuImage,
-    caption: mainMenu,
-    contextInfo: {
-      mentionedJid: [m.sender]
-    }
-  });
+    const sentMessage = await Matrix.sendMessage(m.from, {
+      image: menuImage,
+      caption: mainMenu,
+      contextInfo: {
+        mentionedJid: [m.sender],
+        forwardingScore: 999,
+        isForwarded: true,
+        forwardedNewsletterMessageInfo: {
+          newsletterJid: '120363398040175935@newsletter',
+          newsletterName: "JawadTechX",
+          serverMessageId: 143
+        }
+      }
+    }, {
+      quoted: m
+    });
 
-  // Send audio after the menu
-  await Matrix.sendMessage(m.from, {
-    audio: { url: 'https://files.catbox.moe/ksvao4.mp3' },
-    mimetype: 'audio/mp4',
-    ptt: true
-  });
-};
+    // Send audio after sending the menu
+    await Matrix.sendMessage(m.from, {
+      audio: { url: 'https://files.catbox.moe/ksvao4.mp3' },
+      mimetype: 'audio/mp4',
+      ptt: true
+    }, { quoted: m });
 
-// Handle menu responses
-Matrix.ev.on('messages.upsert', async (event) => {
-  const message = event.messages[0];
+    // Set up listener for menu selection
+    Matrix.ev.on('messages.upsert', async (event) => {
+      const receivedMessage = event.messages[0];
+      if (!receivedMessage?.message?.extendedTextMessage) return;
 
-  if (!message?.message?.extendedTextMessage) return;
+      const receivedText = receivedMessage.message.extendedTextMessage.text.trim();
+      if (receivedMessage.message.extendedTextMessage.contextInfo?.stanzaId !== sentMessage.key.id) return;
 
-  const messageText = message.message.extendedTextMessage.text.trim().toLowerCase();
+      let menuResponse;
 
-  // Trigger word is 'menu1'
-  if (messageText === 'menu1') {
-    await sendMenu(message, Matrix);
-  }
-
-  // Listen for menu selections after menu display
-  if (message.message.extendedTextMessage.contextInfo?.stanzaId === sentMessage.key.id) {
-    let menuResponse;
-    let menuTitle;
-
-    const receivedText = message.message.extendedTextMessage.text.trim();
-
-    switch (receivedText) {
-      case "1":
-        menuTitle = "Download Menu";
-        menuResponse = `
-╭━━〔 Download Menu 〕━━┈⊷
+      switch (receivedText) {
+        case "1":
+          menuResponse = `
+╭━━〔 *Download Menu* 〕━━┈⊷
 ┃◈╭─────────────·๏
 ┃◈┃• apk
 ┃◈┃• facebook
@@ -155,12 +170,11 @@ Matrix.ev.on('messages.upsert', async (event) => {
 ┃◈┃• tiktok
 ┃◈└───────────┈⊷
 ╰──────────────┈⊷`;
-        break;
+          break;
 
-      case "2":
-        menuTitle = "Converter Menu";
-        menuResponse = `
-╭━━〔 Converter Menu 〕━━┈⊷
+        case "2":
+          menuResponse = `
+╭━━〔 *Converter Menu* 〕━━┈⊷
 ┃◈╭─────────────·๏
 ┃◈┃• attp
 ┃◈┃• attp2
@@ -171,12 +185,11 @@ Matrix.ev.on('messages.upsert', async (event) => {
 ┃◈┃• mp3
 ┃◈└───────────┈⊷
 ╰──────────────┈⊷`;
-        break;
+          break;
 
-      case "3":
-        menuTitle = "AI Menu";
-        menuResponse = `
-╭━━〔 AI Menu 〕━━┈⊷
+        case "3":
+          menuResponse = `
+╭━━〔 *AI Menu* 〕━━┈⊷
 ┃◈╭─────────────·๏
 ┃◈┃• ai
 ┃◈┃• bug
@@ -187,12 +200,11 @@ Matrix.ev.on('messages.upsert', async (event) => {
 ┃◈┃• gemini
 ┃◈└───────────┈⊷
 ╰──────────────┈⊷`;
-        break;
+          break;
 
-      case "4":
-        menuTitle = "Tools Menu";
-        menuResponse = `
-╭━━〔 Tools Menu 〕━━┈⊷
+        case "4":
+          menuResponse = `
+╭━━〔 *Tools Menu* 〕━━┈⊷
 ┃◈╭─────────────·๏
 ┃◈┃• calculator
 ┃◈┃• tempmail
@@ -201,12 +213,11 @@ Matrix.ev.on('messages.upsert', async (event) => {
 ┃◈┃• tts
 ┃◈└───────────┈⊷
 ╰──────────────┈⊷`;
-        break;
+          break;
 
-      case "5":
-        menuTitle = "Group Menu";
-        menuResponse = `
-╭━━〔 Group Menu 〕━━┈⊷
+        case "5":
+          menuResponse = `
+╭━━〔 *Group Menu* 〕━━┈⊷
 ┃◈╭─────────────·๏
 ┃◈┃• linkgroup
 ┃◈┃• setppgc
@@ -226,12 +237,11 @@ Matrix.ev.on('messages.upsert', async (event) => {
 ┃◈┃• getbio
 ┃◈└───────────┈⊷
 ╰──────────────┈⊷`;
-        break;
+          break;
 
-      case "6":
-        menuTitle = "Search Menu";
-        menuResponse = `
-╭━━〔 Search Menu 〕━━┈⊷
+        case "6":
+          menuResponse = `
+╭━━〔 *Search Menu* 〕━━┈⊷
 ┃◈╭─────────────·๏
 ┃◈┃• play
 ┃◈┃• yts
@@ -246,69 +256,67 @@ Matrix.ev.on('messages.upsert', async (event) => {
 ┃◈┃• lyrics
 ┃◈└───────────┈⊷
 ╰──────────────┈⊷`;
-        break;
+          break;
 
-      case "7":
-        menuTitle = "Main Menu";
-        menuResponse = `
-╭━━〔 Main Menu 〕━━┈⊷
+        case "7":
+          menuResponse = `
+╭━━〔 *Main Menu* 〕━━┈⊷
 ┃◈╭─────────────·๏
 ┃◈┃• ping
 ┃◈┃• alive
-┃◈┃• info
-┃◈┃• botinfo
-┃◈┃• donate
-┃◈┃• uptime
-┃◈┃• support
-┃◈┃• donate
-┃◈┃• changelog
-┃◈┃• help
-┃◈┃• update
+┃◈┃• owner
+┃◈┃• menu
+┃◈┃• infobot
 ┃◈└───────────┈⊷
 ╰──────────────┈⊷`;
-        break;
+          break;
 
-      case "8":
-        menuTitle = "Owner Menu";
-        menuResponse = `
-╭━━〔 Owner Menu 〕━━┈⊷
+        case "8":
+          menuResponse = `
+╭━━〔 *Owner Menu* 〕━━┈⊷
 ┃◈╭─────────────·๏
-┃◈┃• addbot
-┃◈┃• deletebot
-┃◈┃• blacklist
-┃◈┃• restart
-┃◈┃• botstatus
-┃◈┃• lockbot
-┃◈┃• unlockbot
+┃◈┃• join
+┃◈┃• leave
+┃◈┃• block
+┃◈┃• unblock
+┃◈┃• setppbot
+┃◈┃• anticall
+┃◈┃• setstatus
+┃◈┃• setnamebot
+┃◈┃• autotyping
+┃◈┃• alwaysonline
+┃◈┃• autoread
+┃◈┃• autosview
 ┃◈└───────────┈⊷
 ╰──────────────┈⊷`;
-        break;
+          break;
 
-      case "9":
-        menuTitle = "Stalk Menu";
-        menuResponse = `
-╭━━〔 Stalk Menu 〕━━┈⊷
+        case "9":
+          menuResponse = `
+╭━━〔 *Stalk Menu* 〕━━┈⊷
 ┃◈╭─────────────·๏
-┃◈┃• stalkuser
-┃◈┃• stalkprofile
-┃◈┃• stalkstatus
-┃◈┃• stalkgroup
-┃◈┃• stalkchat
+┃◈┃• truecaller
+┃◈┃• instastalk
+┃◈┃• githubstalk
 ┃◈└───────────┈⊷
 ╰──────────────┈⊷`;
-        break;
+          break;
 
-      default:
-        menuTitle = "Invalid Option";
-        menuResponse = "Please select a valid menu option (1-9).";
-    }
-
-    // Send the selected menu
-    await Matrix.sendMessage(m.from, {
-      text: menuResponse,
-      contextInfo: {
-        mentionedJid: [m.sender]
+        default:
+          menuResponse = "*Invalid Reply Please Reply With A Number Between 1 to 9*";
       }
+
+      // Send the menu response
+      await Matrix.sendMessage(m.from, {
+        text: menuResponse,
+        contextInfo: {
+          mentionedJid: [m.sender],
+          forwardingScore: 999,
+          isForwarded: true
+        }
+      });
     });
   }
-});
+};
+
+export default menu;
