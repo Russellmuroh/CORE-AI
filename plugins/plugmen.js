@@ -36,8 +36,8 @@ const minutes = Math.floor((uptime % 3600) / 60); // Calculate minutes
 const seconds = Math.floor(uptime % 60); // Calculate seconds
 
 // Uptime
-const uptimeMessage = `*I am alive now since ${day}d ${hours}h ${minutes}m ${seconds}s*`;
-const runMessage = `*☀️ ${day} Day*\n*🕐 ${hours} Hour*\n*⏰ ${minutes} Minutes*\n*⏱️ ${seconds} Seconds*\n`;
+const uptimeMessage = `I am alive now since ${day}d ${hours}h ${minutes}m ${seconds}s`;
+const runMessage = `☀️ ${day} Day\n🕐 ${hours} Hour\n⏰ ${minutes} Minutes\n⏱️ ${seconds} Seconds`;
 
 const xtime = moment.tz("Asia/Colombo").format("HH:mm:ss");
 const xdate = moment.tz("Asia/Colombo").format("DD/MM/YYYY");
@@ -45,24 +45,22 @@ const time2 = moment().tz("Asia/Colombo").format("HH:mm:ss");
 let pushwish = "";
 
 if (time2 < "05:00:00") {
-  pushwish = "Good Morning 🌄";
+  pushwish = 'Good Morning 🌄';
 } else if (time2 < "11:00:00") {
-  pushwish = "Good Morning 🌄";
+  pushwish = 'Good Morning 🌄';
 } else if (time2 < "15:00:00") {
-  pushwish = "Good Afternoon 🌅";
+  pushwish = 'Good Afternoon 🌅';
 } else if (time2 < "18:00:00") {
-  pushwish = "Good Evening 🌃";
+  pushwish = 'Good Evening 🌃';
 } else if (time2 < "19:00:00") {
-  pushwish = "Good Evening 🌃";
+  pushwish = 'Good Evening 🌃';
 } else {
-  pushwish = "Good Night 🌌";
+  pushwish = 'Good Night 🌌';
 }
 
-const menu = async (m, Matrix) => {
-  const command = m.body.trim().toLowerCase(); // Capture the message and make it case-insensitive
-  
-  if (command === "menu1") { // Check for the trigger word "menu1"
-    const mainMenu = `
+// Main Menu function
+const sendMenu = async (m, Matrix) => {
+  const mainMenu = `
 ╭━━━〔 ${config.BOT_NAME} 〕━━━┈⊷
 ┃★╭──────────────
 ┃★│ Owner : ${config.OWNER_NAME}
@@ -78,8 +76,6 @@ const menu = async (m, Matrix) => {
 
 > ${pushwish} ${m.pushName}!
 
-
-
 ╭━━〔 Menu List 〕━━┈⊷
 ┃◈╭─────────────·๏
 ┃◈┃• 1. Download Menu
@@ -91,52 +87,55 @@ const menu = async (m, Matrix) => {
 ┃◈┃• 7. Main Menu
 ┃◈┃• 8. Owner Menu
 ┃◈┃• 9. Stalk Menu
-┃◈┃• update
+┃◈┃•10. update
 ┃◈└───────────┈⊷
 ╰──────────────┈⊷
 
 > Reply with the number (1-9)`;
 
-    const getMenuImage = async () => {
-      return "https://files.catbox.moe/7jt69h.jpg"; // Use the remote image URL
-    };
+  const menuImage = 'https://files.catbox.moe/7jt69h.jpg';  // Image URL
 
-    const menuImage = await getMenuImage();
+  // Send the main menu with image
+  const sentMessage = await Matrix.sendMessage(m.from, {
+    image: menuImage,
+    caption: mainMenu,
+    contextInfo: {
+      mentionedJid: [m.sender]
+    }
+  });
 
-    const sentMessage = await Matrix.sendMessage(m.from, {
-      image: menuImage,
-      caption: mainMenu,
-      contextInfo: {
-        mentionedJid: [m.sender],
-        forwardingScore: 999,
-        isForwarded: true
-      }
-    }, {
-      quoted: m
-    });
+  // Send audio after the menu
+  await Matrix.sendMessage(m.from, {
+    audio: { url: 'https://files.catbox.moe/ksvao4.mp3' },
+    mimetype: 'audio/mp4',
+    ptt: true
+  });
+};
 
-    // Send audio after sending the menu
-    await Matrix.sendMessage(m.from, {
-      audio: { url: 'https://files.catbox.moe/ksvao4.mp3' },
-      mimetype: 'audio/mp4',
-      ptt: true
-    }, { quoted: m });
+// Handle menu responses
+Matrix.ev.on('messages.upsert', async (event) => {
+  const message = event.messages[0];
 
-    // Set up listener for menu selection
-    Matrix.ev.on('messages.upsert', async (event) => {
-      const receivedMessage = event.messages[0];
-      if (!receivedMessage?.message?.extendedTextMessage) return;
+  if (!message?.message?.extendedTextMessage) return;
 
-      const receivedText = receivedMessage.message.extendedTextMessage.text.trim();
-      if (receivedMessage.message.extendedTextMessage.contextInfo?.stanzaId !== sentMessage.key.id) return;
+  const messageText = message.message.extendedTextMessage.text.trim().toLowerCase();
 
-      let menuResponse;
-      let menuTitle;
+  // Trigger word is 'menu1'
+  if (messageText === 'menu1') {
+    await sendMenu(message, Matrix);
+  }
 
-      switch (receivedText) {
-        case "1":
-          menuTitle = "Download Menu";
-          menuResponse = `
+  // Listen for menu selections after menu display
+  if (message.message.extendedTextMessage.contextInfo?.stanzaId === sentMessage.key.id) {
+    let menuResponse;
+    let menuTitle;
+
+    const receivedText = message.message.extendedTextMessage.text.trim();
+
+    switch (receivedText) {
+      case "1":
+        menuTitle = "Download Menu";
+        menuResponse = `
 ╭━━〔 Download Menu 〕━━┈⊷
 ┃◈╭─────────────·๏
 ┃◈┃• apk
@@ -156,11 +155,11 @@ const menu = async (m, Matrix) => {
 ┃◈┃• tiktok
 ┃◈└───────────┈⊷
 ╰──────────────┈⊷`;
-          break;
+        break;
 
-        case "2":
-          menuTitle = "Converter Menu";
-          menuResponse = `
+      case "2":
+        menuTitle = "Converter Menu";
+        menuResponse = `
 ╭━━〔 Converter Menu 〕━━┈⊷
 ┃◈╭─────────────·๏
 ┃◈┃• attp
@@ -170,14 +169,13 @@ const menu = async (m, Matrix) => {
 ┃◈┃• dbinary
 ┃◈┃• emojimix
 ┃◈┃• mp3
-┃◈┃• mp4
 ┃◈└───────────┈⊷
 ╰──────────────┈⊷`;
-          break;
+        break;
 
-        case "3":
-          menuTitle = "AI Menu";
-          menuResponse = `
+      case "3":
+        menuTitle = "AI Menu";
+        menuResponse = `
 ╭━━〔 AI Menu 〕━━┈⊷
 ┃◈╭─────────────·๏
 ┃◈┃• ai
@@ -189,11 +187,11 @@ const menu = async (m, Matrix) => {
 ┃◈┃• gemini
 ┃◈└───────────┈⊷
 ╰──────────────┈⊷`;
-          break;
+        break;
 
-        case "4":
-          menuTitle = "Tools Menu";
-          menuResponse = `
+      case "4":
+        menuTitle = "Tools Menu";
+        menuResponse = `
 ╭━━〔 Tools Menu 〕━━┈⊷
 ┃◈╭─────────────·๏
 ┃◈┃• calculator
@@ -203,11 +201,11 @@ const menu = async (m, Matrix) => {
 ┃◈┃• tts
 ┃◈└───────────┈⊷
 ╰──────────────┈⊷`;
-          break;
+        break;
 
-        case "5":
-          menuTitle = "Group Menu";
-          menuResponse = `
+      case "5":
+        menuTitle = "Group Menu";
+        menuResponse = `
 ╭━━〔 Group Menu 〕━━┈⊷
 ┃◈╭─────────────·๏
 ┃◈┃• linkgroup
@@ -228,11 +226,11 @@ const menu = async (m, Matrix) => {
 ┃◈┃• getbio
 ┃◈└───────────┈⊷
 ╰──────────────┈⊷`;
-          break;
+        break;
 
-        case "6":
-          menuTitle = "Search Menu";
-          menuResponse = `
+      case "6":
+        menuTitle = "Search Menu";
+        menuResponse = `
 ╭━━〔 Search Menu 〕━━┈⊷
 ┃◈╭─────────────·๏
 ┃◈┃• play
@@ -248,89 +246,69 @@ const menu = async (m, Matrix) => {
 ┃◈┃• lyrics
 ┃◈└───────────┈⊷
 ╰──────────────┈⊷`;
-          break;
+        break;
 
-        case "7":
-          menuTitle = "Main Menu";
-          menuResponse = `
+      case "7":
+        menuTitle = "Main Menu";
+        menuResponse = `
 ╭━━〔 Main Menu 〕━━┈⊷
 ┃◈╭─────────────·๏
 ┃◈┃• ping
 ┃◈┃• alive
-┃◈┃• owner
-┃◈┃• menu
-┃◈┃• infobot
+┃◈┃• info
+┃◈┃• botinfo
+┃◈┃• donate
+┃◈┃• uptime
+┃◈┃• support
+┃◈┃• donate
+┃◈┃• changelog
+┃◈┃• help
+┃◈┃• update
 ┃◈└───────────┈⊷
 ╰──────────────┈⊷`;
-          break;
+        break;
 
-        case "8":
-          menuTitle = "Owner Menu";
-          menuResponse = `
+      case "8":
+        menuTitle = "Owner Menu";
+        menuResponse = `
 ╭━━〔 Owner Menu 〕━━┈⊷
 ┃◈╭─────────────·๏
-┃◈┃• join
-┃◈┃• leave
-┃◈┃• block
-┃◈┃• unblock
-┃◈┃• setppbot
-┃◈┃• anticall
-┃◈┃• setstatus
-┃◈┃• setnamebot
-┃◈┃• autotyping
-┃◈┃• alwaysonline
-┃◈┃• autoread
-┃◈┃• autosview
+┃◈┃• addbot
+┃◈┃• deletebot
+┃◈┃• blacklist
+┃◈┃• restart
+┃◈┃• botstatus
+┃◈┃• lockbot
+┃◈┃• unlockbot
 ┃◈└───────────┈⊷
 ╰──────────────┈⊷`;
-          break;
+        break;
 
-        case "9":
-          menuTitle = "Stalk Menu";
-          menuResponse = `
+      case "9":
+        menuTitle = "Stalk Menu";
+        menuResponse = `
 ╭━━〔 Stalk Menu 〕━━┈⊷
 ┃◈╭─────────────·๏
-┃◈┃• truecaller
-┃◈┃• instastalk
-┃◈┃• githubstalk
+┃◈┃• stalkuser
+┃◈┃• stalkprofile
+┃◈┃• stalkstatus
+┃◈┃• stalkgroup
+┃◈┃• stalkchat
 ┃◈└───────────┈⊷
 ╰──────────────┈⊷`;
-          break;
+        break;
 
-        default:
-          menuTitle = "Invalid Choice";
-          menuResponse = "*Invalid Reply Please Reply With A Number Between 1 to 9*";
+      default:
+        menuTitle = "Invalid Option";
+        menuResponse = "Please select a valid menu option (1-9).";
+    }
+
+    // Send the selected menu
+    await Matrix.sendMessage(m.from, {
+      text: menuResponse,
+      contextInfo: {
+        mentionedJid: [m.sender]
       }
-
-      // Format the full response with title and description
-      const fullResponse = `
-╭━━━〔 ${config.BOT_NAME} - ${menuTitle} 〕━━━┈⊷
-┃★╭──────────────
-┃★│• Owner : ${config.OWNER_NAME}
-┃★│• User : ${m.pushName}
-┃★│• Prefix : [No Prefix]
-┃★│• Version : 3.1.0
-┃★╰──────────────
-╰━━━━━━━━━━━━━━━┈⊷
-
-${menuResponse}
-
-> ${config.DESCRIPTION}`;
-
-      // Send the response with image and context info
-      await Matrix.sendMessage(m.from, {
-        image: menuImage,
-        caption: fullResponse,
-        contextInfo: {
-          mentionedJid: [m.sender],
-          forwardingScore: 999,
-          isForwarded: true
-        }
-      }, {
-        quoted: receivedMessage
-      });
     });
   }
-};
-
-export default menu;
+});
