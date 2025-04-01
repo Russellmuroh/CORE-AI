@@ -116,13 +116,13 @@ Matrix.ev.on('connection.update', (update) => {
         if (initialConnection) {
             console.log(chalk.green("Connected Successfull"));
             Matrix.sendMessage(Matrix.user.id, { 
-                image: { url: "https://files.catbox.moe/ytb8lg.jpg" }, 
+                image: { url: "https://files.catbox.moe/8h0cyi.jpg" }, 
                 caption: `╭─────────────━┈⊷
 │ *CONNECTED SUCCESSFULLY *
 ╰─────────────━┈⊷
 
 ╭─────────────━┈⊷
-│BOT NAME : CORE AI
+│BOT NAME : Cloud Ai
 │DEV : BRUCE BERA
 ╰─────────────━┈⊷
 
