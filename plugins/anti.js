@@ -1,77 +1,31 @@
-import pkg from '@whiskeysockets/baileys'; const { proto } = pkg; import config from '../config.cjs';
+// plugins/antidelete.js import fs from 'fs'; import config from '../config.cjs';
 
-// Global toggle for anti-delete let antiDeleteEnabled = false; const messageCache = new Map();
+const antidelete = async (m, { sock }) => { let chat = m.key.remoteJid; let text = m.body.toLowerCase();
 
-// Cache all messages (for content recovery) const cacheMessages = (Matrix) => { Matrix.ev.on('messages.upsert', ({ messages }) => { if (!antiDeleteEnabled) return;
-
-messages.forEach(msg => {
-        if (msg.key.fromMe || !msg.message) return;
-        messageCache.set(msg.key.id, {
-            content: msg.message.conversation || 
-                    msg.message.extendedTextMessage?.text ||
-                    (msg.message.imageMessage ? '[Image]' :
-                     msg.message.videoMessage ? '[Video]' :
-                     msg.message.audioMessage ? '[Audio]' :
-                     '[Media Message]'),
-            sender: msg.key.participant || msg.key.remoteJid,
-            timestamp: new Date().toLocaleTimeString(),
-            chatJid: msg.key.remoteJid
-        });
-    });
-});
-
-};
-
-// Handle message deletions globally when enabled const handleDeletedMessages = (Matrix) => { Matrix.ev.on('messages.update', async (update) => { if (!antiDeleteEnabled) return;
-
-try {
-        for (const item of update) {
-            const { key, update: { message: deletedMessage } } = item;
-            if (key.fromMe) continue;
-            
-            const cachedMsg = messageCache.get(key.id);
-            if (!cachedMsg) continue;
-
-            const sender = cachedMsg.sender.split('@')[0];
-            const chatName = key.remoteJid.endsWith('@g.us') 
-                ? (await Matrix.groupMetadata(key.remoteJid).catch(() => ({ subject: 'Group Chat' }))).subject
-                : 'Private Chat';
-
-            await Matrix.sendMessage(key.remoteJid, { 
-                text: `╭━━━〔 *CLOUD AI DELETED MESSAGES* 〕━━━┈⊷
-
-┃▸╭─────────── ┃▸┃๏ DELETION ALERT ┃▸└───────────···๏ ╰────────────────┈⊷ ╭━━〔 Context 〕━━┈⊷ ┇๏ Chat: ${chatName} ┇๏ Sender: @${sender} ┇๏ Deleted At: ${new Date().toLocaleTimeString()} ╰━━━━━━━━━━━━──┈⊷ ╭━━〔 Original Message 〕━━┈⊷ ┇๏ ${cachedMsg.content} ╰━━━━━━━━━━━━──┈⊷
-
-> © CLOUD AI`, mentions: [cachedMsg.sender] });
-
-
-
-messageCache.delete(key.id);
-        }
-    } catch (error) {
-        console.error('Anti-Delete Handler Error:', error);
-    }
-});
-
-};
-
-const AntiDelete = async (m, Matrix) => { const text = m.body.trim().toLowerCase();
-
-// Handle anti-delete toggle commands (without prefix)
 if (text === 'antidelete on') {
-    antiDeleteEnabled = true;
-    await m.reply(`╭━━━〔 *CLOUD AI DELETED MESSAGES* 〕━━━┈⊷
+    config.antidelete = true;
+    fs.writeFileSync('./config.cjs', `export default ${JSON.stringify(config, null, 2)}`);
+    await sock.sendMessage(chat, { text: '✅ *Antidelete Activated!*
 
-┃▸╭─────────── ┃▸┃๏ GLOBAL ACTIVATION ┃▸└───────────···๏ ╰────────────────┈⊷ Anti-delete protection is now ACTIVE in: ✦ All Groups ✦ Private Chats ✦ Every conversation
+🔹 Cloud AI will now recover deleted messages, videos, and photos.' }); } else if (text === 'antidelete off') { config.antidelete = false; fs.writeFileSync('./config.cjs', export default ${JSON.stringify(config, null, 2)}); await sock.sendMessage(chat, { text: '❌ Antidelete Deactivated!
 
-> © CLOUD AI); await m.React('✅'); } else if (text === 'antidelete off') { antiDeleteEnabled = false; messageCache.clear(); await m.reply(╭━━━〔 CLOUD AI DELETED MESSAGES 〕━━━┈⊷ ┃▸╭─────────── ┃▸┃๏ GLOBAL DEACTIVATION ┃▸└───────────···๏ ╰────────────────┈⊷ Anti-delete protection is now DISABLED everywhere.
+🔸 Cloud AI will no longer recover deleted messages.' }); } };
 
+const onDelete = async (m, { sock }) => { if (config.antidelete && m.key.fromMe === false) { let chat = m.key.remoteJid; let messageType = Object.keys(m.message)[0]; let msgText = '🗑 Deleted Message Recovered!';
 
+if (messageType === 'conversation') {
+        msgText += `\n👤 *User:* @${m.key.participant.split('@')[0]}\n💬 *Message:* ${m.message.conversation}`;
+    } else if (messageType === 'imageMessage') {
+        msgText += `\n👤 *User:* @${m.key.participant.split('@')[0]}\n📸 *Photo Deleted!*`;
+    } else if (messageType === 'videoMessage') {
+        msgText += `\n👤 *User:* @${m.key.participant.split('@')[0]}\n🎥 *Video Deleted!*`;
+    }
+    
+    await sock.sendMessage(chat, { text: msgText, mentions: [m.key.participant] });
+}
 
-> © CLOUD AI`); await m.React('✅'); } };
+};
 
-
-
-export default (Matrix) => { cacheMessages(Matrix); handleDeletedMessages(Matrix); return AntiDelete; };
+export default { name: 'antidelete', execute: antidelete, onDelete: onDelete, };
 
             
