@@ -22,7 +22,7 @@ const alive = async (m, Matrix) => {
   const seconds = Math.floor(uptimeSeconds % 60);
 
   const uptimeMessage = `╭──────────◆
-│  *ɴᴏɴ ᴘʀᴇғɪx xᴍᴅ*
+│  *CLOUD AI INFO*
 │───────────◆
 │ *ᴜᴘᴛɪᴍᴇ ɪɴғᴏ:*
 │  *📆ᴅᴀʏs:* ${days}
