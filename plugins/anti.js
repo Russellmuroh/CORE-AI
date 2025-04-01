@@ -2,13 +2,9 @@ import pkg from '@whiskeysockets/baileys'; const { proto } = pkg; import config 
 
 // Global toggle for anti-delete let antiDeleteEnabled = false; const messageCache = new Map();
 
-const AntiDelete = async (m, Matrix) => { const text = m.body.trim().toLowerCase();
+// Cache all messages (for content recovery) const cacheMessages = (Matrix) => { Matrix.ev.on('messages.upsert', ({ messages }) => { if (!antiDeleteEnabled) return;
 
-// Cache all messages (for content recovery)
-Matrix.ev.on('messages.upsert', ({ messages }) => {
-    if (!antiDeleteEnabled) return;
-    
-    messages.forEach(msg => {
+messages.forEach(msg => {
         if (msg.key.fromMe || !msg.message) return;
         messageCache.set(msg.key.id, {
             content: msg.message.conversation || 
@@ -24,26 +20,11 @@ Matrix.ev.on('messages.upsert', ({ messages }) => {
     });
 });
 
-// Handle anti-delete toggle commands (without prefix)
-if (text === 'antidelete on') {
-    antiDeleteEnabled = true;
-    await m.reply(`╭━━━〔 *CLOUD AI DELETED MESSAGES* 〕━━━┈⊷
+};
 
-┃▸╭─────────── ┃▸┃๏ GLOBAL ACTIVATION ┃▸└───────────···๏ ╰────────────────┈⊷ Anti-delete protection is now ACTIVE in: ✦ All Groups ✦ Private Chats ✦ Every conversation
+// Handle message deletions globally when enabled const handleDeletedMessages = (Matrix) => { Matrix.ev.on('messages.update', async (update) => { if (!antiDeleteEnabled) return;
 
-> © CLOUD AI); await m.React('✅'); } else if (text === 'antidelete off') { antiDeleteEnabled = false; messageCache.clear(); await m.reply(╭━━━〔 CLOUD AI DELETED MESSAGES 〕━━━┈⊷ ┃▸╭─────────── ┃▸┃๏ GLOBAL DEACTIVATION ┃▸└───────────···๏ ╰────────────────┈⊷ Anti-delete protection is now DISABLED everywhere.
-
-
-
-> © CLOUD AI`); await m.React('✅'); }
-
-
-
-// Handle message deletions globally when enabled
-Matrix.ev.on('messages.update', async (update) => {
-    if (!antiDeleteEnabled) return;
-
-    try {
+try {
         for (const item of update) {
             const { key, update: { message: deletedMessage } } = item;
             if (key.fromMe) continue;
@@ -74,5 +55,23 @@ messageCache.delete(key.id);
 
 };
 
-export default AntiDelete;
+const AntiDelete = async (m, Matrix) => { const text = m.body.trim().toLowerCase();
 
+// Handle anti-delete toggle commands (without prefix)
+if (text === 'antidelete on') {
+    antiDeleteEnabled = true;
+    await m.reply(`╭━━━〔 *CLOUD AI DELETED MESSAGES* 〕━━━┈⊷
+
+┃▸╭─────────── ┃▸┃๏ GLOBAL ACTIVATION ┃▸└───────────···๏ ╰────────────────┈⊷ Anti-delete protection is now ACTIVE in: ✦ All Groups ✦ Private Chats ✦ Every conversation
+
+> © CLOUD AI); await m.React('✅'); } else if (text === 'antidelete off') { antiDeleteEnabled = false; messageCache.clear(); await m.reply(╭━━━〔 CLOUD AI DELETED MESSAGES 〕━━━┈⊷ ┃▸╭─────────── ┃▸┃๏ GLOBAL DEACTIVATION ┃▸└───────────···๏ ╰────────────────┈⊷ Anti-delete protection is now DISABLED everywhere.
+
+
+
+> © CLOUD AI`); await m.React('✅'); } };
+
+
+
+export default (Matrix) => { cacheMessages(Matrix); handleDeletedMessages(Matrix); return AntiDelete; };
+
+            
