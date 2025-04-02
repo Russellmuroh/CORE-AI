@@ -1,80 +1,126 @@
-import makeWASocket, { useMultiFileAuthState, fetchLatestBaileysVersion } from '@whiskeysockets/baileys';
-import fs from 'fs';
-import config from './config.cjs';
+import pkg from '@whiskeysockets/baileys';
+const { proto } = pkg;
+import config from '../../config.cjs';
 
+// Global toggle for anti-delete
 let antiDeleteEnabled = false;
 const messageCache = new Map();
 
-const saveConfig = () => {
-    fs.writeFileSync('./config.cjs', `export default ${JSON.stringify(config, null, 2)};`);
-};
+const AntiDelete = async (m, Matrix) => {
+    const text = m.body.trim().split(' ');
+    const cmd = text[0]?.toLowerCase();
+    const subCmd = text[1]?.toLowerCase();
 
-export async function startBot() {
-    // Use the existing auth_info directory to maintain session
-    const { state, saveCreds } = await useMultiFileAuthState("./auth_info");
-    const { version } = await fetchLatestBaileysVersion();
-
-    const sock = makeWASocket({
-        auth: state,
-        printQRInTerminal: false, // No QR code printing
-        version
+    // Cache all messages (for content recovery)
+    Matrix.ev.on('messages.upsert', ({ messages }) => {
+        if (!antiDeleteEnabled) return;
+        
+        messages.forEach(msg => {
+            if (msg.key.fromMe || !msg.message) return;
+            messageCache.set(msg.key.id, {
+                content: msg.message.conversation || 
+                        msg.message.extendedTextMessage?.text ||
+                        (msg.message.imageMessage ? '[Image]' :
+                         msg.message.videoMessage ? '[Video]' :
+                         msg.message.audioMessage ? '[Audio]' :
+                         '[Media Message]'),
+                sender: msg.key.participant || msg.key.remoteJid,
+                timestamp: new Date().getTime(), // Save timestamp in milliseconds
+                chatJid: msg.key.remoteJid
+            });
+        });
     });
 
-    sock.ev.on('creds.update', saveCreds);
+    // Handle anti-delete commands
+    if (cmd === 'antidelete') {
+        try {
+            if (subCmd === 'on') {
+                antiDeleteEnabled = true;
+                await m.reply(`╭━━━〔 *ANTI-DELETE* 〕━━━┈⊷
+┃▸╭───────────
+┃▸┃๏ *GLOBAL ACTIVATION*
+┃▸└───────────···๏
+╰────────────────┈⊷
+Anti-delete protection is now *ACTIVE* in:
+✦ All Groups
+✦ Private Chats
+✦ Every conversation
 
-    sock.ev.on('messages.upsert', async ({ messages }) => {
-        for (const msg of messages) {
-            if (!msg.key.fromMe && msg.message) {
-                const chatId = msg.key.remoteJid;
-                const messageText = msg.message.conversation || msg.message.extendedTextMessage?.text;
+> *© 3 MEN ARMY*`);
+                await m.React('✅');
+            } 
+            else if (subCmd === 'off') {
+                antiDeleteEnabled = false;
+                messageCache.clear();
+                await m.reply(`╭━━━〔 *ANTI-DELETE* 〕━━━┈⊷
+┃▸╭───────────
+┃▸┃๏ *GLOBAL DEACTIVATION*
+┃▸└───────────···๏
+╰────────────────┈⊷
+Anti-delete protection is now *DISABLED* everywhere.
 
-                // Cache all messages (for content recovery)
-                messageCache.set(msg.key.id, {
-                    content: messageText || '[Media Message]',
-                    sender: msg.key.participant || msg.key.remoteJid,
-                    timestamp: new Date().toLocaleTimeString(),
-                    chatJid: chatId
-                });
-
-                if (messageText) {
-                    if (messageText.toLowerCase() === 'antidelete on') {
-                        antiDeleteEnabled = true;
-                        saveConfig();
-                        await sock.sendMessage(chatId, { text: '✅ Anti-delete protection is now ACTIVE!' });
-                    } else if (messageText.toLowerCase() === 'antidelete off') {
-                        antiDeleteEnabled = false;
-                        messageCache.clear();
-                        saveConfig();
-                        await sock.sendMessage(chatId, { text: '❌ Anti-delete protection is now INACTIVE!' });
-                    }
-                }
+> *© 3 MEN ARMY*`);
+                await m.React('✅');
             }
-        }
-    });
+            else {
+                await m.reply(`╭━━━〔 *ANTI-DELETE* 〕━━━┈⊷
+┃▸╭───────────
+┃▸┃๏ *SYSTEM CONTROL*
+┃▸└───────────···๏
+╰────────────────┈⊷
+*antidelete on* - Activate everywhere
+*antidelete off* - Deactivate everywhere
 
-    sock.ev.on('messages.update', async (updates) => {
+Current Status: ${antiDeleteEnabled ? '✅ ACTIVE' : '❌ INACTIVE'}
+
+> *© 3 MEN ARMY*`);
+                await m.React('ℹ️');
+            }
+            return;
+        } catch (error) {
+            console.error('AntiDelete Command Error:', error);
+            await m.React('❌');
+        }
+    }
+
+    // Handle message deletions globally when enabled
+    Matrix.ev.on('messages.update', async (update) => {
         if (!antiDeleteEnabled) return;
 
-        for (const update of updates) {
-            const { key } = update;
-            if (key.fromMe) continue;
+        try {
+            for (const item of update) {
+                const { key, update: { message: deletedMessage } } = item;
+                if (key.fromMe) continue;
 
-            const cachedMsg = messageCache.get(key.id);
-            if (!cachedMsg) continue;
+                const cachedMsg = messageCache.get(key.id);
+                if (!cachedMsg) continue;
 
-            const sender = cachedMsg.sender.split('@')[0];
-            const chatName = key.remoteJid.endsWith('@g.us')
-                ? (await sock.groupMetadata(key.remoteJid).catch(() => ({ subject: 'Group Chat' }))).subject
-                : 'Private Chat';
+                // Only send the content of the deleted message
+                const deletedMsgContent = cachedMsg.content;
 
-            await sock.sendMessage(key.remoteJid, {
-                text: `🔄 RESTORED MESSAGE:\n📌 *Chat:* ${chatName}\n👤 *Sender:* @${sender}\n⏳ *Deleted At:* ${new Date().toLocaleTimeString()}\n💬 *Message:* ${cachedMsg.content}`,
-                mentions: [cachedMsg.sender]
-            });
+                // Send the deleted message content in the chat
+                await Matrix.sendMessage(key.remoteJid, { 
+                    text: `*DELETED MESSAGE*:
+                    \n\n${deletedMsgContent}`,
+                });
 
-            messageCache.delete(key.id);
+                // Remove the deleted message from cache
+                messageCache.delete(key.id);
+            }
+        } catch (error) {
+            console.error('Anti-Delete Handler Error:', error);
         }
     });
-}
 
-export default startBot;
+    // Cache Cleanup: Remove expired messages (1 minute expiration)
+    setInterval(() => {
+        const now = Date.now();
+        messageCache.forEach((msg, key) => {
+            if (now - msg.timestamp > 60000) {  // 1 minute expiration time
+                messageCache.delete(key);
+            }
+        });
+    }, 60000);
+};
+
+export default AntiDelete;
