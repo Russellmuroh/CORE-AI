@@ -38,7 +38,7 @@ const AntiDelete = async (m, Matrix) => {
                 antiDeleteEnabled = true;
                 await m.reply(`╭━━━〔 *ANTI-DELETE* 〕━━━┈⊷
 ┃▸╭───────────
-┃▸┃๏ *GLOBAL ACTIVATION*
+┃▸┃๏ *CLOUD AI*
 ┃▸└───────────···๏
 ╰────────────────┈⊷
 Anti-delete protection is now *ACTIVE* in:
@@ -54,12 +54,12 @@ Anti-delete protection is now *ACTIVE* in:
                 messageCache.clear();
                 await m.reply(`╭━━━〔 *ANTI-DELETE* 〕━━━┈⊷
 ┃▸╭───────────
-┃▸┃๏ *GLOBAL DEACTIVATION*
+┃▸┃๏ *CLOUD AI*
 ┃▸└───────────···๏
 ╰────────────────┈⊷
 Anti-delete protection is now *DISABLED* everywhere.
 
-> *© 3 MEN ARMY*`);
+> *Regards Bera*`);
                 await m.React('✅');
             }
             else {
@@ -73,7 +73,7 @@ Anti-delete protection is now *DISABLED* everywhere.
 
 Current Status: ${antiDeleteEnabled ? '✅ ACTIVE' : '❌ INACTIVE'}
 
-> *© 3 MEN ARMY*`);
+> *Regards Bera*`);
                 await m.React('ℹ️');
             }
             return;
