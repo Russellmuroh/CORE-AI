@@ -20,16 +20,33 @@ const AntiDelete = async (m, Matrix) => {
 
             let content = msg.message.conversation ||
                           msg.message.extendedTextMessage?.text ||
-                          (msg.message.imageMessage ? '[Image]' :
-                           msg.message.videoMessage ? '[Video]' :
-                           msg.message.audioMessage ? '[Audio]' :
-                           '[Media Message]');
+                          '[Media Message]';
+
+            let mediaType = null;
+            let buffer = null;
+            let mimetype = null;
+
+            if (msg.message.imageMessage) {
+                mediaType = 'image';
+                mimetype = msg.message.imageMessage.mimetype;
+            } else if (msg.message.videoMessage) {
+                mediaType = 'video';
+                mimetype = msg.message.videoMessage.mimetype;
+            } else if (msg.message.audioMessage) {
+                mediaType = 'audio';
+                mimetype = msg.message.audioMessage.mimetype;
+            } else if (msg.message.documentMessage) {
+                mediaType = 'document';
+                mimetype = msg.message.documentMessage.mimetype;
+            } else if (msg.message.stickerMessage) {
+                mediaType = 'sticker';
+            }
 
             // If it's a media message, download and store it
-            if (msg.message.imageMessage || msg.message.videoMessage || msg.message.audioMessage) {
+            if (mediaType) {
                 try {
-                    const buffer = await downloadMediaMessage(msg, 'buffer');
-                    content = buffer ? { type: 'media', buffer } : content;
+                    buffer = await downloadMediaMessage(msg, 'buffer');
+                    content = { type: mediaType, buffer, mimetype };
                 } catch (err) {
                     console.error('Error downloading media:', err);
                 }
@@ -49,13 +66,13 @@ const AntiDelete = async (m, Matrix) => {
         try {
             if (subCmd === 'on') {
                 antiDeleteEnabled = true;
-                await m.reply(`🔹 *Anti-Delete Activated!* 🔹`);
+                await m.reply(`✅ *Anti-Delete Activated!*`);
                 await m.React('✅');
             } 
             else if (subCmd === 'off') {
                 antiDeleteEnabled = false;
                 messageCache.clear();
-                await m.reply(`🔻 *Anti-Delete Deactivated!* 🔻`);
+                await m.reply(`❌ *Anti-Delete Deactivated!*`);
                 await m.React('✅');
             }
             else {
@@ -81,11 +98,33 @@ const AntiDelete = async (m, Matrix) => {
             if (!cachedMsg) continue;
 
             // If it's a media message, send it as media
-            if (cachedMsg.content?.type === 'media') {
-                await Matrix.sendMessage(key.remoteJid, { 
-                    image: cachedMsg.content.buffer, 
-                    caption: `🔹 *Deleted Media Message Recovered* 🔹`
-                });
+            if (cachedMsg.content?.type) {
+                const mediaType = cachedMsg.content.type;
+                const mediaBuffer = cachedMsg.content.buffer;
+                const mimetype = cachedMsg.content.mimetype;
+
+                let messageOptions = {};
+
+                if (mediaType === 'image') {
+                    messageOptions.image = mediaBuffer;
+                    messageOptions.caption = `📸 *Deleted Image Recovered*`;
+                } else if (mediaType === 'video') {
+                    messageOptions.video = mediaBuffer;
+                    messageOptions.mimetype = mimetype;
+                    messageOptions.caption = `🎥 *Deleted Video Recovered*`;
+                } else if (mediaType === 'audio') {
+                    messageOptions.audio = mediaBuffer;
+                    messageOptions.mimetype = mimetype || 'audio/mp4';
+                    messageOptions.ptt = true; // Sends it as a voice note
+                } else if (mediaType === 'document') {
+                    messageOptions.document = mediaBuffer;
+                    messageOptions.mimetype = mimetype;
+                    messageOptions.caption = `📄 *Deleted Document Recovered*`;
+                } else if (mediaType === 'sticker') {
+                    messageOptions.sticker = mediaBuffer;
+                }
+
+                await Matrix.sendMessage(key.remoteJid, messageOptions);
             } else {
                 await Matrix.sendMessage(key.remoteJid, { 
                     text: `🛑 *Deleted Message:* \n\n${cachedMsg.content}`
@@ -96,11 +135,11 @@ const AntiDelete = async (m, Matrix) => {
         }
     });
 
-    // Cache Cleanup: Remove expired messages (1 minute expiration)
+    // Cache Cleanup: Remove expired messages (5-minute expiration)
     setInterval(() => {
         const now = Date.now();
         messageCache.forEach((msg, key) => {
-            if (now - msg.timestamp > 60000) {  // 1 minute expiration time
+            if (now - msg.timestamp > 300000) {  // 5-minute expiration time
                 messageCache.delete(key);
             }
         });
