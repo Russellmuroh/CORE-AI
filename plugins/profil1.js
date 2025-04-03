@@ -22,7 +22,7 @@ const ProfileCommand = async (m, Matrix) => {
                       m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0] || 
                       m.sender; // Default to sender if no reply or mention
 
-        // Verify user exists on WhatsApp
+        // Verify if the user exists on WhatsApp
         const [user] = await Matrix.onWhatsApp(userJid).catch(() => []);
         if (!user?.exists) return m.reply("❌ User not found on WhatsApp");
 
@@ -30,11 +30,11 @@ const ProfileCommand = async (m, Matrix) => {
         let ppUrl;
         try {
             ppUrl = await profilePictureUrl(userJid, 'image');
-        } catch {
-            ppUrl = 'https://i.ibb.co/KhYC4FY/1221bc0bdd2354b42b293317ff2adbcf-icon.png';
+        } catch (error) {
+            ppUrl = 'https://i.ibb.co/KhYC4FY/1221bc0bdd2354b42b293317ff2adbcf-icon.png'; // Default image if no profile found
         }
 
-        // Get user name
+        // Get the user's name
         let userName = userJid.split('@')[0];
         try {
             const presence = await Matrix.presenceSubscribe(userJid).catch(() => null);
@@ -63,6 +63,7 @@ const ProfileCommand = async (m, Matrix) => {
 🛡️ *Verified:* ${user.verifiedName ? "✅ Verified" : "❌ Not verified"}
 `.trim();
 
+        // Send the user information and profile picture
         await Matrix.sendMessage(m.from, {
             image: { url: ppUrl },
             caption: userInfo,
