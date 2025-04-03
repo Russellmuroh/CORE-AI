@@ -4,12 +4,15 @@ import config from '../../config.cjs';
 
 const ProfileCommand = async (m, Matrix) => {
     const text = m.body?.trim().toLowerCase();
-    
+
     // Check if command is "profile" or "user"
     if (!["profile", "user"].includes(text)) return;
 
     // Ensure only the bot user can use this command
-    if (m.sender !== Matrix.user.id) {
+    const botUserId = Matrix.user.id.replace(/:.+/, '').replace(/@.+/, ''); // Normalize bot ID
+    const senderId = m.sender.replace(/@.+/, ''); // Normalize sender ID
+
+    if (senderId !== botUserId) {
         return m.reply("❌ You are not authorized to use this command.");
     }
 
