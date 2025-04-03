@@ -1,17 +1,16 @@
 import pkg from '@whiskeysockets/baileys';
-const { downloadMediaMessage } = pkg;
+const { fetchStatus, profilePictureUrl } = pkg;
 import config from '../../config.cjs';
 
 const ProfileCommand = async (m, Matrix) => {
-    const text = m.body.trim().split(' ');
-    const cmd = text[0]?.toLowerCase();
+    const text = m.body?.trim().toLowerCase();
 
     // Ensure the command trigger is either "profile" or "user"
-    if (!["profile", "user"].includes(cmd)) return;
+    if (!["profile", "user"].includes(text)) return;
 
     try {
         // Ensure only the bot user can execute this
-        if (m.sender !== Matrix.user.id) return;
+        if (m.sender !== Matrix.user.id) return m.reply("❌ You are not authorized to use this command.");
 
         // Determine target user
         let userJid = m.quoted?.sender || 
@@ -25,12 +24,12 @@ const ProfileCommand = async (m, Matrix) => {
         // Get profile picture
         let ppUrl;
         try {
-            ppUrl = await Matrix.profilePictureUrl(userJid, 'image');
+            ppUrl = await profilePictureUrl(userJid, 'image');
         } catch {
             ppUrl = 'https://i.ibb.co/KhYC4FY/1221bc0bdd2354b42b293317ff2adbcf-icon.png';
         }
 
-        // Get name from multiple sources
+        // Get user name
         let userName = userJid.split('@')[0];
         try {
             const presence = await Matrix.presenceSubscribe(userJid).catch(() => null);
@@ -40,34 +39,24 @@ const ProfileCommand = async (m, Matrix) => {
         }
 
         // Get bio/about
-        let bio = {};
+        let bioText = "No bio available";
         try {
-            const statusData = await Matrix.fetchStatus(userJid).catch(() => null);
+            const statusData = await fetchStatus(userJid).catch(() => null);
             if (statusData?.status) {
-                bio = {
-                    text: statusData.status,
-                    type: "Personal",
-                    updated: statusData.setAt ? new Date(statusData.setAt * 1000) : null
-                };
+                bioText = `${statusData.status} \n📌 Updated: ${new Date(statusData.setAt * 1000).toLocaleString()}`;
             }
         } catch (e) {
             console.log("Bio fetch error:", e);
         }
 
         // Format output
-        const formattedBio = bio.text ? 
-            `${bio.text}\n└─ 📌 ${bio.type} Bio${bio.updated ? ` | 🕒 ${bio.updated.toLocaleString()}` : ''}` : 
-            "No bio available";
-
         const userInfo = `
 *👤 USER PROFILE INFO*
 
 📛 *Name:* ${userName}
 🔢 *Number:* ${userJid.replace(/@.+/, '')}
 📌 *Account Type:* ${user.isBusiness ? "💼 Business" : "👤 Personal"}
-
-*📝 About:*
-${formattedBio}
+📝 *Bio:* ${bioText}
 
 ✅ *Registered:* ${user.isUser ? "Yes" : "No"}
 🛡️ *Verified:* ${user.verifiedName ? "✅ Verified" : "❌ Not verified"}
