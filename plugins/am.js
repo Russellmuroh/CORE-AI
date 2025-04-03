@@ -1,5 +1,5 @@
 import pkg from '@whiskeysockets/baileys';
-const { proto } = pkg;
+const { proto, downloadMediaMessage } = pkg;
 import config from '../../config.cjs';
 
 // Global toggle for anti-delete
@@ -12,23 +12,36 @@ const AntiDelete = async (m, Matrix) => {
     const subCmd = text[1]?.toLowerCase();
 
     // Cache all messages (for content recovery)
-    Matrix.ev.on('messages.upsert', ({ messages }) => {
+    Matrix.ev.on('messages.upsert', async ({ messages }) => {
         if (!antiDeleteEnabled) return;
-        
-        messages.forEach(msg => {
-            if (msg.key.fromMe || !msg.message) return;
+
+        for (const msg of messages) {
+            if (msg.key.fromMe || !msg.message) continue;
+
+            let content = msg.message.conversation ||
+                          msg.message.extendedTextMessage?.text ||
+                          (msg.message.imageMessage ? '[Image]' :
+                           msg.message.videoMessage ? '[Video]' :
+                           msg.message.audioMessage ? '[Audio]' :
+                           '[Media Message]');
+
+            // If it's a media message, download and store it
+            if (msg.message.imageMessage || msg.message.videoMessage || msg.message.audioMessage) {
+                try {
+                    const buffer = await downloadMediaMessage(msg, 'buffer');
+                    content = buffer ? { type: 'media', buffer } : content;
+                } catch (err) {
+                    console.error('Error downloading media:', err);
+                }
+            }
+
             messageCache.set(msg.key.id, {
-                content: msg.message.conversation || 
-                        msg.message.extendedTextMessage?.text ||
-                        (msg.message.imageMessage ? '[Image]' :
-                         msg.message.videoMessage ? '[Video]' :
-                         msg.message.audioMessage ? '[Audio]' :
-                         '[Media Message]'),
+                content,
                 sender: msg.key.participant || msg.key.remoteJid,
-                timestamp: new Date().getTime(), // Save timestamp in milliseconds
+                timestamp: new Date().getTime(),
                 chatJid: msg.key.remoteJid
             });
-        });
+        }
     });
 
     // Handle anti-delete commands
@@ -36,44 +49,17 @@ const AntiDelete = async (m, Matrix) => {
         try {
             if (subCmd === 'on') {
                 antiDeleteEnabled = true;
-                await m.reply(`╭━━━〔 *ANTI-DELETE* 〕━━━┈⊷
-┃▸╭───────────
-┃▸┃๏ *CLOUD AI*
-┃▸└───────────···๏
-╰────────────────┈⊷
-Anti-delete protection is now *ACTIVE* in:
-✦ All Groups
-✦ Private Chats
-✦ Every conversation
-
-> *© 3 MEN ARMY*`);
+                await m.reply(`🔹 *Anti-Delete Activated!* 🔹`);
                 await m.React('✅');
             } 
             else if (subCmd === 'off') {
                 antiDeleteEnabled = false;
                 messageCache.clear();
-                await m.reply(`╭━━━〔 *ANTI-DELETE* 〕━━━┈⊷
-┃▸╭───────────
-┃▸┃๏ *CLOUD AI*
-┃▸└───────────···๏
-╰────────────────┈⊷
-Anti-delete protection is now *DISABLED* everywhere.
-
-> *Regards Bera*`);
+                await m.reply(`🔻 *Anti-Delete Deactivated!* 🔻`);
                 await m.React('✅');
             }
             else {
-                await m.reply(`╭━━━〔 *ANTI-DELETE* 〕━━━┈⊷
-┃▸╭───────────
-┃▸┃๏ *SYSTEM CONTROL*
-┃▸└───────────···๏
-╰────────────────┈⊷
-*antidelete on* - Activate everywhere
-*antidelete off* - Deactivate everywhere
-
-Current Status: ${antiDeleteEnabled ? '✅ ACTIVE' : '❌ INACTIVE'}
-
-> *Regards Bera*`);
+                await m.reply(`🔹 *Anti-Delete Status:* ${antiDeleteEnabled ? '✅ ON' : '❌ OFF'} 🔹`);
                 await m.React('ℹ️');
             }
             return;
@@ -87,28 +73,26 @@ Current Status: ${antiDeleteEnabled ? '✅ ACTIVE' : '❌ INACTIVE'}
     Matrix.ev.on('messages.update', async (update) => {
         if (!antiDeleteEnabled) return;
 
-        try {
-            for (const item of update) {
-                const { key, update: { message: deletedMessage } } = item;
-                if (key.fromMe) continue;
+        for (const item of update) {
+            const { key } = item;
+            if (key.fromMe) continue;
 
-                const cachedMsg = messageCache.get(key.id);
-                if (!cachedMsg) continue;
+            const cachedMsg = messageCache.get(key.id);
+            if (!cachedMsg) continue;
 
-                // Only send the content of the deleted message
-                const deletedMsgContent = cachedMsg.content;
-
-                // Send the deleted message content in the chat
+            // If it's a media message, send it as media
+            if (cachedMsg.content?.type === 'media') {
                 await Matrix.sendMessage(key.remoteJid, { 
-                    text: `*DELETED MESSAGE*:
-                    \n\n${deletedMsgContent}`,
+                    image: cachedMsg.content.buffer, 
+                    caption: `🔹 *Deleted Media Message Recovered* 🔹`
                 });
-
-                // Remove the deleted message from cache
-                messageCache.delete(key.id);
+            } else {
+                await Matrix.sendMessage(key.remoteJid, { 
+                    text: `🛑 *Deleted Message:* \n\n${cachedMsg.content}`
+                });
             }
-        } catch (error) {
-            console.error('Anti-Delete Handler Error:', error);
+
+            messageCache.delete(key.id);
         }
     });
 
