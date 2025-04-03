@@ -17,10 +17,10 @@ const ProfileCommand = async (m, Matrix) => {
     }
 
     try {
-        // Determine target user
+        // Determine the target user from the replied message
         let userJid = m.quoted?.sender || 
                       m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0] || 
-                      m.sender;
+                      m.sender; // Default to sender if no reply or mention
 
         // Verify user exists on WhatsApp
         const [user] = await Matrix.onWhatsApp(userJid).catch(() => []);
