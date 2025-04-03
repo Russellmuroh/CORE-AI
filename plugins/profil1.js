@@ -4,20 +4,22 @@ import config from '../../config.cjs';
 
 const ProfileCommand = async (m, Matrix) => {
     const text = m.body?.trim().toLowerCase();
-
-    // Ensure the command trigger is either "profile" or "user"
+    
+    // Check if command is "profile" or "user"
     if (!["profile", "user"].includes(text)) return;
 
-    try {
-        // Ensure only the bot user can execute this
-        if (m.sender !== Matrix.user.id) return m.reply("❌ You are not authorized to use this command.");
+    // Ensure only the bot user can use this command
+    if (m.sender !== Matrix.user.id) {
+        return m.reply("❌ You are not authorized to use this command.");
+    }
 
+    try {
         // Determine target user
         let userJid = m.quoted?.sender || 
                       m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0] || 
                       m.sender;
 
-        // Verify user exists
+        // Verify user exists on WhatsApp
         const [user] = await Matrix.onWhatsApp(userJid).catch(() => []);
         if (!user?.exists) return m.reply("❌ User not found on WhatsApp");
 
@@ -34,9 +36,7 @@ const ProfileCommand = async (m, Matrix) => {
         try {
             const presence = await Matrix.presenceSubscribe(userJid).catch(() => null);
             if (presence?.pushname) userName = presence.pushname;
-        } catch (e) {
-            console.log("Name fetch error:", e);
-        }
+        } catch (e) {}
 
         // Get bio/about
         let bioText = "No bio available";
@@ -45,11 +45,9 @@ const ProfileCommand = async (m, Matrix) => {
             if (statusData?.status) {
                 bioText = `${statusData.status} \n📌 Updated: ${new Date(statusData.setAt * 1000).toLocaleString()}`;
             }
-        } catch (e) {
-            console.log("Bio fetch error:", e);
-        }
+        } catch (e) {}
 
-        // Format output
+        // Format and send result
         const userInfo = `
 *👤 USER PROFILE INFO*
 
@@ -62,7 +60,6 @@ const ProfileCommand = async (m, Matrix) => {
 🛡️ *Verified:* ${user.verifiedName ? "✅ Verified" : "❌ Not verified"}
 `.trim();
 
-        // Send result
         await Matrix.sendMessage(m.from, {
             image: { url: ppUrl },
             caption: userInfo,
