@@ -1,3 +1,5 @@
+//Sorry here's the correct handler.js do as asked do not delete anything
+
 import { serialize, decodeJid } from '../lib/Serializer.js';
 import path from 'path';
 import fs from 'fs/promises';
@@ -6,74 +8,71 @@ import { smsg } from '../lib/myfunc.cjs';
 import { handleAntilink } from './antilink.js';
 import { fileURLToPath } from 'url';
 import { shengChat, shengCommand } from '../lib/shengMode.js'; // Integrated Sheng AI
-import AntiDelete from '../plugins/am.js'; // ✅ Import Anti-Delete System
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Function to get group admins
 export const getGroupAdmins = (participants) => {
-    return participants.filter(i => i.admin === "superadmin" || i.admin === "admin").map(i => i.id);
+return participants.filter(i => i.admin === "superadmin" || i.admin === "admin").map(i => i.id);
 };
 
 const Handler = async (chatUpdate, sock, logger) => {
-    try {
-        if (chatUpdate.type !== 'notify') return;
+try {
+if (chatUpdate.type !== 'notify') return;
 
-        const m = serialize(JSON.parse(JSON.stringify(chatUpdate.messages[0])), sock, logger);  
-        if (!m.message) return;  
+const m = serialize(JSON.parse(JSON.stringify(chatUpdate.messages[0])), sock, logger);  
+    if (!m.message) return;  
 
-        const participants = m.isGroup ? await sock.groupMetadata(m.from).then(metadata => metadata.participants) : [];  
-        const groupAdmins = m.isGroup ? getGroupAdmins(participants) : [];  
-        const botId = sock.user.id.split(':')[0] + '@s.whatsapp.net';  
-        const isBotAdmins = m.isGroup ? groupAdmins.includes(botId) : false;  
-        const isAdmins = m.isGroup ? groupAdmins.includes(m.sender) : false;  
+    const participants = m.isGroup ? await sock.groupMetadata(m.from).then(metadata => metadata.participants) : [];  
+    const groupAdmins = m.isGroup ? getGroupAdmins(participants) : [];  
+    const botId = sock.user.id.split(':')[0] + '@s.whatsapp.net';  
+    const isBotAdmins = m.isGroup ? groupAdmins.includes(botId) : false;  
+    const isAdmins = m.isGroup ? groupAdmins.includes(m.sender) : false;  
 
-        const PREFIX = /^[\\/!#.]/;  
-        const isCOMMAND = (body) => PREFIX.test(body);  
-        const prefixMatch = isCOMMAND(m.body) ? m.body.match(PREFIX) : null;  
-        const prefix = prefixMatch ? prefixMatch[0] : '/';  
-        const cmd = m.body.startsWith(prefix) ? m.body.slice(prefix.length).split(' ')[0].toLowerCase() : '';  
-        const text = m.body.slice(prefix.length + cmd.length).trim();  
-        const botNumber = await sock.decodeJid(sock.user.id);  
-        const ownerNumber = config.OWNER_NUMBER + '@s.whatsapp.net';  
-        let isCreator = m.sender === botNumber; // ✅ Now only the bot user (not the developer)
+    const PREFIX = /^[\\/!#.]/;  
+    const isCOMMAND = (body) => PREFIX.test(body);  
+    const prefixMatch = isCOMMAND(m.body) ? m.body.match(PREFIX) : null;  
+    const prefix = prefixMatch ? prefixMatch[0] : '/';  
+    const cmd = m.body.startsWith(prefix) ? m.body.slice(prefix.length).split(' ')[0].toLowerCase() : '';  
+    const text = m.body.slice(prefix.length + cmd.length).trim();  
+    const botNumber = await sock.decodeJid(sock.user.id);  
+    const ownerNumber = config.OWNER_NUMBER + '@s.whatsapp.net';  
+    let isCreator = m.sender === ownerNumber || m.sender === botNumber;  
 
-        if (!sock.public && !isCreator) return;  
+    if (!sock.public && !isCreator) return;  
 
-        await handleAntilink(m, sock, logger, isBotAdmins, isAdmins, isCreator);  
+    await handleAntilink(m, sock, logger, isBotAdmins, isAdmins, isCreator);  
 
-        // **Sheng Mode Handling**  
-        await shengCommand(m); // Check for "Sheng on/off" triggers  
-        await shengChat(m); // Process Sheng AI responses  
+    // **Sheng Mode Handling**  
+    await shengCommand(m); // Check for "Sheng on/off" triggers  
+    await shengChat(m); // Process Sheng AI responses  
 
-        // ✅ Wrap AntiDelete in try-catch so it doesn't crash the bot
-        try {
-            await AntiDelete(m, sock); 
-        } catch (err) {
-            console.error('❌ AntiDelete Error:', err);
-        }
+    // ✅ Corrected Plugin Folder Path  
+    const pluginDir = path.resolve(__dirname, '..', 'plugins');  
+      
+    try {  
+        const pluginFiles = await fs.readdir(pluginDir);  
 
-        // ✅ Load Plugins Without Blocking Execution
-        const pluginDir = path.resolve(__dirname, '..', 'plugins');  
-        fs.readdir(pluginDir).then(pluginFiles => {
-            pluginFiles.forEach(async file => {
-                if (file.endsWith('.js')) {  
-                    const pluginPath = path.join(pluginDir, file);  
-                    try {  
-                        const pluginModule = await import(`file://${pluginPath}`);  
-                        await pluginModule.default(m, sock);  
-                    } catch (err) {  
-                        console.error(`❌ Failed to load plugin: ${pluginPath}`, err);  
-                    }  
-                }
-            });
-        }).catch(err => {
-            console.error(`❌ Plugin folder not found: ${pluginDir}`, err);
-        });
+        for (const file of pluginFiles) {  
+            if (file.endsWith('.js')) {  
+                const pluginPath = path.join(pluginDir, file);  
+                try {  
+                    const pluginModule = await import(`file://${pluginPath}`);  
+                    await pluginModule.default(m, sock);  
+                } catch (err) {  
+                    console.error(`❌ Failed to load plugin: ${pluginPath}`, err);  
+                }  
+            }  
+        }  
+    } catch (err) {  
+        console.error(`❌ Plugin folder not found: ${pluginDir}`, err);  
+    }  
 
-    } catch (e) {  
-        console.error(e);  
-    }
+} catch (e) {  
+    console.error(e);  
+}
+
 };
 
 export default Handler;
