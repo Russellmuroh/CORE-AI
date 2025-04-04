@@ -1,23 +1,13 @@
 {
-  "name": "BERA TECH",
+  "name": "CLOUD AI",
   "description": "I am BERA TECH WhatsApp MultiDevice Bot built in NodeJs to enhance the experience.",
-  "logo": "https://files.catbox.moe/waszph.jpg",
+  "logo": "https://files.catbox.moe/e3t1zg.jpg",
   "keywords": ["BERA-TECH", "whatsapp-bot", "whatsapp-md-bot"],
   "repository": "https://github.com/DEVELOPER-BERA/NON-PREFIX-XMD",
   "stack": "container",
   "env": { 
-    "HEROKU_API_KEY": {
-      "description": "Place your Heroku API Key here",
-      "required": true,
-      "value": ""
-    },
-    "HEROKU_APP_NAME": {
-      "description": "Place your Heroku App Name here",
-      "required": true,
-      "value": ""
-    },
     "SESSION_ID": {
-      "description": "Ensure your session Id starts with the word BERA-TECH$",
+      "description": "Ensure your session Id starts with the word cloud-ai~",
       "required": true,
       "value": ""
     },
