@@ -4,7 +4,7 @@ const repo = async (m, Matrix) => {
     const text = m.body.trim().toLowerCase();
     if (text !== "repo") return; // Only triggers with "repo"
 
-    const repoUrl = "https://u.bk9.fun/s/uNc7kc";
+    const repoUrl = "https://github.com/DEVELOPER-BERA/CLOUD-AI";
     const apiUrl = "https://api.github.com/repos/DEVELOPER-BERA/CLOUD-AI";
 
     try {
