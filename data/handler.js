@@ -11,7 +11,6 @@ import AntiDelete from '../plugins/am.js'; // ✅ Import Anti-Delete System
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Function to get group admins
 export const getGroupAdmins = (participants) => {
     return participants.filter(i => i.admin === "superadmin" || i.admin === "admin").map(i => i.id);
 };
@@ -47,16 +46,17 @@ const Handler = async (chatUpdate, sock, logger) => {
         await shengCommand(m); // Check for "Sheng on/off" triggers  
         await shengChat(m); // Process Sheng AI responses  
 
-        // ✅ Call AntiDelete system (handles "antidelete on/off")
-        await AntiDelete(m, sock); 
+        // ✅ Wrap AntiDelete in try-catch so it doesn't crash the bot
+        try {
+            await AntiDelete(m, sock); 
+        } catch (err) {
+            console.error('❌ AntiDelete Error:', err);
+        }
 
-        // ✅ Corrected Plugin Folder Path  
+        // ✅ Load Plugins Without Blocking Execution
         const pluginDir = path.resolve(__dirname, '..', 'plugins');  
-          
-        try {  
-            const pluginFiles = await fs.readdir(pluginDir);  
-
-            for (const file of pluginFiles) {  
+        fs.readdir(pluginDir).then(pluginFiles => {
+            pluginFiles.forEach(async file => {
                 if (file.endsWith('.js')) {  
                     const pluginPath = path.join(pluginDir, file);  
                     try {  
@@ -65,11 +65,11 @@ const Handler = async (chatUpdate, sock, logger) => {
                     } catch (err) {  
                         console.error(`❌ Failed to load plugin: ${pluginPath}`, err);  
                     }  
-                }  
-            }  
-        } catch (err) {  
-            console.error(`❌ Plugin folder not found: ${pluginDir}`, err);  
-        }  
+                }
+            });
+        }).catch(err => {
+            console.error(`❌ Plugin folder not found: ${pluginDir}`, err);
+        });
 
     } catch (e) {  
         console.error(e);  
