@@ -68,6 +68,10 @@ const AntiDelete = async (m, Matrix) => {
     if (cmd === 'antidelete') {
         const subCmd = text[1]?.toLowerCase(); // Handle subcommand (on/off)
 
+        // Debugging log to check if the sender is correct
+        console.log('Owner JID:', ownerJid);
+        console.log('Message sender JID:', m.sender);
+
         if (m.sender !== ownerJid) {
             await m.reply('🚫 *You are not authorized to use this command!*');
             return;
