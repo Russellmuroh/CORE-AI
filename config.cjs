@@ -5,7 +5,7 @@ const config = {
   BOT_NAME: process.env.BOT_NAME || "CLOUD AI",
   SESSION_ID: process.env.SESSION_ID || "Your Session Id",
   PREFIX: process.env.PREFIX || '.',
-  AUTO_STATUS_SEEN: process.env.AUTO_STATUS_SEEN !== undefined ? process.env.AUTO_STATUS_SEEN === 'true' : true, 
+  AUTO_STATUS_SEEN: process.env.AUTO_STATUS_SEEN !== undefined ? process.env.AUTO_STATUS_SEEN === 'true' : true,
   AUTO_STATUS_REPLY: process.env.AUTO_STATUS_REPLY !== undefined ? process.env.AUTO_STATUS_REPLY === 'true' : true,
   STATUS_READ_MSG: process.env.STATUS_READ_MSG || '',
   AUTO_DL: process.env.AUTO_DL !== undefined ? process.env.AUTO_DL === 'true' : false,
@@ -15,20 +15,21 @@ const config = {
   ALWAYS_ONLINE: process.env.ALWAYS_ONLINE !== undefined ? process.env.ALWAYS_ONLINE === 'true' : false,
   AUTO_REACT: process.env.AUTO_REACT !== undefined ? process.env.AUTO_REACT === 'true' : false,
   AUTO_BLOCK: process.env.AUTO_BLOCK !== undefined ? process.env.AUTO_BLOCK === 'true' : false,
-  REJECT_CALL: process.env.REJECT_CALL !== undefined ? process.env.REJECT_CALL === 'true' : false, 
+  BLOCKED_PREFIXES: process.env.BLOCKED_PREFIXES ? process.env.BLOCKED_PREFIXES.split(',') : ['234', '263', '91'], // Parse from env or default
+  REJECT_CALL: process.env.REJECT_CALL !== undefined ? process.env.REJECT_CALL === 'true' : false,
   NOT_ALLOW: process.env.NOT_ALLOW !== undefined ? process.env.NOT_ALLOW === 'true' : true,
   MODE: process.env.MODE || "public",
   OWNER_NAME: process.env.OWNER_NAME || "BRUCE BERA",
-  OWNER_NUMBER: process.env.OWNER_NUMBER || "254787527752",
+  OWNER_NUMBER: process.env.OWNER_NUMBER || "254743982206",
   GEMINI_KEY: process.env.GEMINI_KEY || "",
-  WELCOME: process.env.WELCOME !== undefined ? process.env.WELCOME === 'true' : false, 
+  WELCOME: process.env.WELCOME !== undefined ? process.env.WELCOME === 'true' : false,
 
   // New Features
   ANTI_DELETE: process.env.ANTI_DELETE !== undefined ? process.env.ANTI_DELETE === 'true' : false,
   AUTO_BIO: process.env.AUTO_BIO !== undefined ? process.env.AUTO_BIO === 'true' : false,
 
   // Juice WRLD Quotes for AutoBio
-  BIO_QUOTES: [
+  BIO_QUOTES: process.env.BIO_QUOTES ? process.env.BIO_QUOTES.split(',') : [
     "I still see your shadows in my room...",
     "You left me falling and landing inside my grave...",
     "I know that the truth is hard to digest...",
