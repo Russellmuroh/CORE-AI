@@ -1,63 +1,78 @@
-import fetch from "node-fetch";
-import config from "../config.cjs";
+import fs from 'fs-extra';
+import config from '../config.cjs';
 
-export const name = "update";
-export const description = "Update bot to the latest version from GitHub and restart.";
+const stickerCommand = async (m, gss) => {
+  const body = m.body.trim().toLowerCase();
+  const validCommands = ['sticker', 's', 'autosticker'];
+  const trigger = validCommands.find(v => body.startsWith(v));
 
-export async function execute(m, { reply }) {
+  if (!trigger) return;
+
+  const text = m.body.slice(trigger.length).trim();
+  const arg = text.split(' ')[0];
+
+  const packname = global.packname || "CLOUD AI";
+  const author = global.author || "🖤🇵🇰";
+
+  if (trigger === 'autosticker') {
+    if (arg === 'on') {
+      config.AUTO_STICKER = true;
+      await m.reply('Auto-sticker is now enabled.');
+    } else if (arg === 'off') {
+      config.AUTO_STICKER = false;
+      await m.reply('Auto-sticker is now disabled.');
+    } else {
+      await m.reply('Usage: autosticker on|off');
+    }
+    return;
+  }
+
+  if (config.AUTO_STICKER && !m.key.fromMe) {
+    if (m.type === 'imageMessage') {
+      let media = await m.download();
+      if (media) {
+        await gss.sendImageAsSticker(m.from, media, m, { packname, author });
+        console.log('Auto sticker sent');
+      } else {
+        console.error('Failed to download media for auto-sticker.');
+      }
+      return;
+    } else if (m.type === 'videoMessage' && m.msg.seconds <= 11) {
+      let media = await m.download();
+      if (media) {
+        await gss.sendVideoAsSticker(m.from, media, m, { packname, author });
+      } else {
+        console.error('Failed to download video for auto-sticker.');
+      }
+      return;
+    }
+  }
+
+  if (validCommands.includes(trigger)) {
+    const quoted = m.quoted || {};
+
+    if (!quoted || (quoted.mtype !== 'imageMessage' && quoted.mtype !== 'videoMessage')) {
+      return m.reply('Send/Reply with an image or video to convert into a sticker using: sticker');
+    }
+
     try {
-        // Check if Heroku API Key and App Name are set
-        if (!config.HEROKU_API_KEY || !config.HEROKU_APP_NAME) {
-            return reply("❌ *Heroku API Key or App Name is missing!*\n\nPlease set them in your environment variables.");
-        }
-
-        // Notify user that update is starting
-        reply("🔄 *Updating bot to the latest version...*\nFetching latest updates from GitHub...");
-
-        // Fetch latest commit from GitHub repo
-        const repo = "DEVELOPER-BERA/CLOUD-AI";
-        const githubApi = `https://api.github.com/repos/${repo}/commits/main`;
-        const commitData = await fetch(githubApi).then(res => res.json());
-
-        if (!commitData.sha) {
-            return reply("⚠️ *Failed to fetch latest update!*\nPlease check if the GitHub repository exists.");
-        }
-
-        const latestCommit = commitData.sha;
-        const commitMessage = commitData.commit.message;
-        const commitUrl = commitData.html_url;
-
-        // Notify about the latest commit
-        reply(`✅ *Latest Commit Found!*\n\n📝 *Message:* ${commitMessage}\n🔗 [View Commit](${commitUrl})\n\n🚀 *Deploying update on Heroku...*`);
-
-        // Trigger Heroku deployment
-        const herokuApi = `https://api.heroku.com/apps/${config.HEROKU_APP_NAME}/builds`;
-        const buildPayload = {
-            source_blob: {
-                url: `https://github.com/${repo}/tarball/main`
-            }
-        };
-
-        const response = await fetch(herokuApi, {
-            method: "POST",
-            headers: {
-                "Accept": "application/vnd.heroku+json; version=3",
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${config.HEROKU_API_KEY}`
-            },
-            body: JSON.stringify(buildPayload)
-        });
-
-        const result = await response.json();
-
-        if (response.status !== 201) {
-            return reply(`❌ *Update Failed!*\n\nError: ${result.message || "Unknown error"}`);
-        }
-
-        // Notify user that update is in progress
-        reply(`🚀 *Update Started!*\nYour bot is now updating to the latest version. This may take a few minutes.\n\n⏳ Please wait...`);
-
+      const media = await quoted.download();
+      if (!media) throw new Error('Failed to download media.');
+      if (quoted.mtype === 'imageMessage') {
+        await gss.sendImageAsSticker(m.from, media, m, { packname, author });
+        m.reply('Sticker created successfully!');
+      }
+      else if (quoted.mtype === 'videoMessage' && quoted.msg.seconds <= 11) {
+        await gss.sendVideoAsSticker(m.from, media, m, { packname, author });
+        m.reply('Sticker created successfully!');
+      } else {
+        m.reply('Video too long. Please send a video that is less than 11 seconds.');
+      }
     } catch (error) {
-        reply(`⚠️ *Update Error!*\n\n${error.message}`);
+      console.error(error);
+      m.reply(`Error: ${error.message}`);
     }
-    }
+  }
+};
+
+export default stickerCommand;
