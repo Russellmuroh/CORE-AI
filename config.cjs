@@ -2,6 +2,7 @@ const fs = require("fs");
 require("dotenv").config();
 
 const config = {
+  AUTO_BIO: process.env.AUTO_BIO !== undefined ? process.env.AUTO_BIO === 'true' : false,
   BOT_NAME: process.env.BOT_NAME || "CLOUD AI",
   SESSION_ID: process.env.SESSION_ID || "Your Session Id",
   PREFIX: process.env.PREFIX || '.',
