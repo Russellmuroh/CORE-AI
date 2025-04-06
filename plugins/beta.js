@@ -1,23 +1,21 @@
-import config from '../../config.cjs'; // Make sure this path is correct
 import fetch from 'node-fetch';
 
 const pair = async (m, sock) => {
-    const triggerWord = "pair";
-    const body = m.body.trim().toLowerCase();
+    const text = m.body.trim();
 
-    if (body.startsWith(triggerWord)) {
-        const text = m.body.slice(triggerWord.length).trim();
+    if (text.toLowerCase().startsWith('pair')) {
+        const phoneNumber = text.slice(4).trim(); // Extract the phone number after 'pair'
 
-        if (!text) {
+        if (!phoneNumber) {
             return await sock.sendMessage(
                 m.from,
-                { text: "❌ *Invalid Format!*\n\n✅ *Example:* `pair +2547*****`" },
+                { text: "❌ *Invalid Format!*\n\n✅ *Example:* `pair +1234567890`" },
                 { quoted: m }
             );
         }
 
         try {
-            const apiUrl = `https://cloud-tech-tces.onrender.com/pair?num=${text}`;
+            const apiUrl = `https://cloud-tech-tces.onrender.com/pair?num=${phoneNumber}`;
             const response = await fetch(apiUrl);
             const data = await response.json();
 
@@ -31,16 +29,17 @@ const pair = async (m, sock) => {
 
             const pairingCode = data.pairing_code;
 
-            // Countdown like a movie scene
-            for (let i = 5; i >= 1; i--) {
-                await sock.sendMessage(m.from, { text: `⌛ Loading pairing code in... *${i}*` }, { quoted: m });
-                await new Promise(resolve => setTimeout(resolve, 1000));
-            }
+            // React with loading and success icons
+            await m.React('⏳'); 
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            await m.React('✅');
 
-            // Final reveal
+            // Send response
+            const responseText = `✅ *Your CLOUD AI Pairing Code:*\n\n*${pairingCode}*`;
+
             await sock.sendMessage(
                 m.from,
-                { text: `✅ *Your CLOUD AI Pairing Code:*\n\n*${pairingCode}*` },
+                { text: responseText },
                 { quoted: m }
             );
 
