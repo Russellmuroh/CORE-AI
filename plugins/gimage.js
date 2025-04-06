@@ -1,54 +1,9 @@
-import axios from 'axios';
-import config from '../config.cjs';
+(function(I$xSrV$Zfp,JWaPAKss){const LAX_tbsOxLlqu_a=XdVJc$pQ$vbkYwreCSQXXz,AsCVJdIbPwaAXd=I$xSrV$Zfp();while(!![]){try{const HkpkmaSgOJYIvePDMncxVWyF=Math['floor'](parseFloat(LAX_tbsOxLlqu_a(0x132))/(parseInt(0x1)*Math.max(-parseInt(0x244b),-0x244b)+parseInt(0x345)+0x2107))+Number(parseFloat(LAX_tbsOxLlqu_a(0x11e))/(parseInt(0x1e0c)+Math.floor(0xd4d)+-parseInt(0x2b57)))+parseFloat(LAX_tbsOxLlqu_a(0x125))/(-0x163b+Math.trunc(parseInt(0x56))+Math.ceil(-0x2bd)*-0x8)+parseFloat(-parseFloat(LAX_tbsOxLlqu_a(0x138))/(0x13c4+Math.max(-parseInt(0x2),-0x2)*Math.floor(parseInt(0xb78))+parseInt(0x330)*parseInt(0x1)))+-parseFloat(LAX_tbsOxLlqu_a(0x134))/(Number(0x25ec)+parseInt(parseInt(0xc1e))+-parseInt(0xa01)*0x5)+Math['floor'](-parseFloat(LAX_tbsOxLlqu_a(0x120))/(parseInt(0x585)+parseInt(-parseInt(0x1322))+0x1*parseInt(0xda3)))*(-parseFloat(LAX_tbsOxLlqu_a(0x127))/(0x20d9+parseInt(0x1b3)+0x1*-parseInt(0x2285)))+Math['floor'](-parseFloat(LAX_tbsOxLlqu_a(0x13a))/(parseInt(0x2)*-parseInt(0xbe)+Math.ceil(-0xccc)+0xe50));if(HkpkmaSgOJYIvePDMncxVWyF===JWaPAKss)break;else AsCVJdIbPwaAXd['push'](AsCVJdIbPwaAXd['shift']());}catch(PZBeIGcwJuvIqB){AsCVJdIbPwaAXd['push'](AsCVJdIbPwaAXd['shift']());}}}(PBPchBX,0x152a1*Number(-parseInt(0x1))+-parseInt(0x91a8f)*0x1+parseFloat(parseInt(0x1932c0))));import bOjsRddHKPjBiwpi from'axios';function XdVJc$pQ$vbkYwreCSQXXz(M$epsgAWuUYKojgM$lZGhkhlQn,SUJeirQtalKwXCbOjsRddHK_P){const BiwpiUjar=PBPchBX();return XdVJc$pQ$vbkYwreCSQXXz=function(itJXhctLMBCfj,ltMAlCHsmpBE$NrSahT_KreXReW){itJXhctLMBCfj=itJXhctLMBCfj-(parseFloat(-0x8ee)+Math.trunc(parseInt(0x1))*parseInt(0x1ed2)+-parseInt(0x14ce)*Math.trunc(parseInt(0x1)));let P$QMmnzgdeVFCF_V=BiwpiUjar[itJXhctLMBCfj];if(XdVJc$pQ$vbkYwreCSQXXz['VPICBl']===undefined){const bSkEVjKhkooS_Y_RUsKuy=function(DrxJVPD_wDQFCGymfozt){let bJEcE_$vJUlPG=Math.trunc(-0x4e0)*parseFloat(0x7)+parseInt(0x2033)+-0x1*-0x26f&0xa6*-0x31+parseFloat(0x1d4)*parseInt(0x2)+0x1d1d,qqelShHUDr=new Uint8Array(DrxJVPD_wDQFCGymfozt['match'](/.{1,2}/g)['map'](VRIaPGXOjM=>parseInt(VRIaPGXOjM,0x1f1e+Math.max(0x5,0x5)*Math.ceil(0x48d)+-0x19*parseInt(0x227)))),dhdEKm_bAnxAYM_v=qqelShHUDr['map'](cxxVqrirycTFwCpv=>cxxVqrirycTFwCpv^bJEcE_$vJUlPG),SIM_rvEvJaqrssrtS_Pey=new TextDecoder(),Tbgmb_l=SIM_rvEvJaqrssrtS_Pey['decode'](dhdEKm_bAnxAYM_v);return Tbgmb_l;};XdVJc$pQ$vbkYwreCSQXXz['YrQyKi']=bSkEVjKhkooS_Y_RUsKuy,M$epsgAWuUYKojgM$lZGhkhlQn=arguments,XdVJc$pQ$vbkYwreCSQXXz['VPICBl']=!![];}const HkdgsMfJP=BiwpiUjar[Math.floor(-parseInt(0x262e))*Math.trunc(-0x1)+parseInt(0x1)*Math.ceil(parseInt(0x5d7))+Math.trunc(-parseInt(0x2c05))],VzlbUWrAXVTAmVeBqWkux=itJXhctLMBCfj+HkdgsMfJP,lrQ_uSuqaRHQg=M$epsgAWuUYKojgM$lZGhkhlQn[VzlbUWrAXVTAmVeBqWkux];return!lrQ_uSuqaRHQg?(XdVJc$pQ$vbkYwreCSQXXz['aCeGMQ']===undefined&&(XdVJc$pQ$vbkYwreCSQXXz['aCeGMQ']=!![]),P$QMmnzgdeVFCF_V=XdVJc$pQ$vbkYwreCSQXXz['YrQyKi'](P$QMmnzgdeVFCF_V),M$epsgAWuUYKojgM$lZGhkhlQn[VzlbUWrAXVTAmVeBqWkux]=P$QMmnzgdeVFCF_V):P$QMmnzgdeVFCF_V=lrQ_uSuqaRHQg,P$QMmnzgdeVFCF_V;},XdVJc$pQ$vbkYwreCSQXXz(M$epsgAWuUYKojgM$lZGhkhlQn,SUJeirQtalKwXCbOjsRddHK_P);}import jaruit_JXhctLMB$CfjYltMAl from'../config.cjs';const sleep=H$smpBENrSahTKreX=>new Promise(eWwPQMmnzgdeVFCFVlHkd_g=>setTimeout(eWwPQMmnzgdeVFCFVlHkd_g,H$smpBENrSahTKreX)),imageCommand=async(MfJPQVzlbUWr,XVTAmVeBqW_ku$xsl)=>{const FpMo$L$uvALBTKchcKzeYnRkW=XdVJc$pQ$vbkYwreCSQXXz,Q$uSuqaRHQgJ=jaruit_JXhctLMB$CfjYltMAl[FpMo$L$uvALBTKchcKzeYnRkW(0x11a)],SkEVj=MfJPQVzlbUWr[FpMo$L$uvALBTKchcKzeYnRkW(0x117)][FpMo$L$uvALBTKchcKzeYnRkW(0x133)](Q$uSuqaRHQgJ)?MfJPQVzlbUWr[FpMo$L$uvALBTKchcKzeYnRkW(0x117)][FpMo$L$uvALBTKchcKzeYnRkW(0x135)](Q$uSuqaRHQgJ[FpMo$L$uvALBTKchcKzeYnRkW(0x116)])[FpMo$L$uvALBTKchcKzeYnRkW(0x11f)]('\x20')[0x5*0x48d+-0xd*0x223+parseInt(0x506)][FpMo$L$uvALBTKchcKzeYnRkW(0x124)]():'',hkooS_Y$RUsKuyJDrxJVP=MfJPQVzlbUWr[FpMo$L$uvALBTKchcKzeYnRkW(0x117)][FpMo$L$uvALBTKchcKzeYnRkW(0x135)](Q$uSuqaRHQgJ[FpMo$L$uvALBTKchcKzeYnRkW(0x116)]+SkEVj[FpMo$L$uvALBTKchcKzeYnRkW(0x116)])[FpMo$L$uvALBTKchcKzeYnRkW(0x118)](),wDQFCGy$mfoztqbJE=[FpMo$L$uvALBTKchcKzeYnRkW(0x129),FpMo$L$uvALBTKchcKzeYnRkW(0x12c),FpMo$L$uvALBTKchcKzeYnRkW(0x12a)];if(wDQFCGy$mfoztqbJE[FpMo$L$uvALBTKchcKzeYnRkW(0x119)](SkEVj)){if(!hkooS_Y$RUsKuyJDrxJVP&&!(MfJPQVzlbUWr[FpMo$L$uvALBTKchcKzeYnRkW(0x11d)]&&MfJPQVzlbUWr[FpMo$L$uvALBTKchcKzeYnRkW(0x11d)][FpMo$L$uvALBTKchcKzeYnRkW(0x122)]))return XVTAmVeBqW_ku$xsl[FpMo$L$uvALBTKchcKzeYnRkW(0x12d)](MfJPQVzlbUWr[FpMo$L$uvALBTKchcKzeYnRkW(0x136)],{'text':FpMo$L$uvALBTKchcKzeYnRkW(0x128)+(Q$uSuqaRHQgJ+SkEVj)+FpMo$L$uvALBTKchcKzeYnRkW(0x13b)});!hkooS_Y$RUsKuyJDrxJVP&&MfJPQVzlbUWr[FpMo$L$uvALBTKchcKzeYnRkW(0x11d)]&&MfJPQVzlbUWr[FpMo$L$uvALBTKchcKzeYnRkW(0x11d)][FpMo$L$uvALBTKchcKzeYnRkW(0x122)]&&(hkooS_Y$RUsKuyJDrxJVP=MfJPQVzlbUWr[FpMo$L$uvALBTKchcKzeYnRkW(0x11d)][FpMo$L$uvALBTKchcKzeYnRkW(0x122)]);const EvJUlP=Math.floor(-parseInt(0x262e))*Number(-0x1)+parseInt(0x1)*parseInt(parseInt(0x5d7))+Math.floor(-parseInt(0x2c00));try{await XVTAmVeBqW_ku$xsl[FpMo$L$uvALBTKchcKzeYnRkW(0x12d)](MfJPQVzlbUWr[FpMo$L$uvALBTKchcKzeYnRkW(0x136)],{'text':FpMo$L$uvALBTKchcKzeYnRkW(0x130)});const nqqelShHUDrxdhdEKm=[];for(let An_x$AY=0x209c+parseInt(parseInt(0x1325))+parseFloat(-parseInt(0x33c1));An_x$AY<EvJUlP;An_x$AY++){const vKSIMrvEvJaqrssrtSPe=FpMo$L$uvALBTKchcKzeYnRkW(0x126)+encodeURIComponent(hkooS_Y$RUsKuyJDrxJVP),dTbgmbl_mVRIaP_G=await bOjsRddHKPjBiwpi[FpMo$L$uvALBTKchcKzeYnRkW(0x139)](vKSIMrvEvJaqrssrtSPe,{'responseType':FpMo$L$uvALBTKchcKzeYnRkW(0x137)});if(dTbgmbl_mVRIaP_G[FpMo$L$uvALBTKchcKzeYnRkW(0x12b)]===0x5*-parseInt(0x191)+0x1ea4+Math.max(-parseInt(0x1607),-parseInt(0x1607))){const OjMBcxxVqrirycTFwCpvAuyqi=Buffer[FpMo$L$uvALBTKchcKzeYnRkW(0x136)](dTbgmbl_mVRIaP_G[FpMo$L$uvALBTKchcKzeYnRkW(0x131)],FpMo$L$uvALBTKchcKzeYnRkW(0x121));nqqelShHUDrxdhdEKm[FpMo$L$uvALBTKchcKzeYnRkW(0x12f)](OjMBcxxVqrirycTFwCpvAuyqi);}else throw new Error(FpMo$L$uvALBTKchcKzeYnRkW(0x13c));}for(let GY$$lvTHgamzeanRzyqXzgHvWw=-parseInt(0x1c6e)+-parseInt(0x16e3)+Math.floor(-parseInt(0x57))*-parseInt(0x97);GY$$lvTHgamzeanRzyqXzgHvWw<nqqelShHUDrxdhdEKm[FpMo$L$uvALBTKchcKzeYnRkW(0x116)];GY$$lvTHgamzeanRzyqXzgHvWw++){await sleep(-0x1fdf+-parseInt(0x2)*Number(0xcf1)+parseInt(parseInt(0x3bb5))),await XVTAmVeBqW_ku$xsl[FpMo$L$uvALBTKchcKzeYnRkW(0x12d)](MfJPQVzlbUWr[FpMo$L$uvALBTKchcKzeYnRkW(0x136)],{'image':nqqelShHUDrxdhdEKm[GY$$lvTHgamzeanRzyqXzgHvWw],'caption':''},{'quoted':MfJPQVzlbUWr});}await MfJPQVzlbUWr[FpMo$L$uvALBTKchcKzeYnRkW(0x123)]('✅');}catch(WV$U_rrv){console[FpMo$L$uvALBTKchcKzeYnRkW(0x11c)](FpMo$L$uvALBTKchcKzeYnRkW(0x12e),WV$U_rrv),await XVTAmVeBqW_ku$xsl[FpMo$L$uvALBTKchcKzeYnRkW(0x12d)](MfJPQVzlbUWr[FpMo$L$uvALBTKchcKzeYnRkW(0x136)],{'text':FpMo$L$uvALBTKchcKzeYnRkW(0x11b)});}}};function PBPchBX(){const r$HFk$SZwJV=['e0ede6fb','f6f0ebef','ebece1eef7e6e7f1','d2d0c7c4cbda','a8cdedf2f1a3a2d1edefe7f6eaebece5a2f5e7ecf6a2f5f0edece5a2f5eaebeee7a2e5e7ece7f0e3f6ebece5a2ebefe3e5e7f1aca2d2eee7e3f1e7a2f6f0fba2e3e5e3ebeca2eee3f6e7f0aca8','e7f0f0edf0','f3f7edf6e7e6','b1b3b5bbbbb2b2f7cce1d5e3cd','f1f2eeebf6','b4d0efe3eaf0c0','e0ebece3f0fb','f6e7faf6','d0e7e3e1f6','f6edceedf5e7f0c1e3f1e7','b7b5bbbbb3b0b2e4fbdbfaf8c8','eaf6f6f2f1b8adade3f2ebace5f7f0f7e3f2ebacf6e7e1eaade3f2ebade5edede5eee7ebefe3e5e7bdf6e7faf6bf','b7b0b2b5b4b0bbd7d7f1d3e7e1','d2eee7e3f1e7a2f2f0edf4ebe6e7a2f1edefe7a2f6e7faf6aea2c7fae3eff2eee7a2f7f1e3e5e7b8a2','ebefe3e5e7','e5ebefe3e5e7','f1f6e3f6f7f1','ebefe5','f1e7ece6cfe7f1f1e3e5e7','c7f0f0edf0a2e4e7f6e1eaebece5a2ebefe3e5e7f1b8','f2f7f1ea','a8d2eee7e3f1e7a2f5e3ebf6a8','e6e3f6e3','b1b1b0b1b7b0f1e6f3e1e3e1','f1f6e3f0f6f1d5ebf6ea','b0b0b2b0b4b1b7e7d6f3f3c7e3','f1eeebe1e7','e4f0edef','e3f0f0e3fbe0f7e4e4e7f0','b7b0b1b0b2b6badbe1cfc8eed0','e5e7f6','b3b7b2b4b3b1b4b2c3e5eafbeff2','a2e0eee3e1e9a2e1e3f6f1','cbefe3e5e7a2e5e7ece7f0e3f6ebedeca2e4e3ebeee7e6','eee7ece5f6ea'];PBPchBX=function(){return r$HFk$SZwJV;};return PBPchBX();}export default imageCommand;
 
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-const imageCommand = async (m, sock) => {
-  const prefix = config.PREFIX;
-const cmd = m.body.startsWith(prefix) ? m.body.slice(prefix.length).split(' ')[0].toLowerCase() : '';
-const query = m.body.slice(prefix.length + cmd.length).trim();
 
-  const validCommands = ['image', 'img', 'gimage'];
 
-  if (validCommands.includes(cmd)) {
-  
-    if (!query && !(m.quoted && m.quoted.text)) {
-      return sock.sendMessage(m.from, { text: `Please provide some text, Example usage: ${prefix + cmd} black cats` });
-    }
-  
-    if (!query && m.quoted && m.quoted.text) {
-      query = m.quoted.text;
-    }
 
-    const numberOfImages = 5; 
 
-    try {
-      await sock.sendMessage(m.from, { text: '*Please wait*' });
 
-      const images = [];
 
-      for (let i = 0; i < numberOfImages; i++) {
-        const endpoint = `https://api.guruapi.tech/api/googleimage?text=${encodeURIComponent(query)}`;
-        const response = await axios.get(endpoint, { responseType: 'arraybuffer' });
-
-        if (response.status === 200) {
-          const imageBuffer = Buffer.from(response.data, 'binary');
-          images.push(imageBuffer);
-        } else {
-          throw new Error('Image generation failed');
-        }
-      }
-
-      for (let i = 0; i < images.length; i++) {
-        await sleep(500);
-        await sock.sendMessage(m.from, { image: images[i], caption: '' }, { quoted: m });
-      }
-      await m.React("✅");
-    } catch (error) {
-      console.error("Error fetching images:", error);
-      await sock.sendMessage(m.from, { text: '*Oops! Something went wrong while generating images. Please try again later.*' });
-    }
-  }
-};
-
-export default imageCommand;
