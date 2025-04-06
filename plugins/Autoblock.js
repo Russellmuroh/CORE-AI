@@ -1,6 +1,6 @@
 import pkg from '@whiskeysockets/baileys'; const { jidDecode } = pkg; import config from '../../config.cjs';
 
-const AutoBlock = async (m, Matrix) => { const blockedPrefixes = [ '+234', // Nigeria '+263', // Zimbabwe '+91'   // India ];
+const AutoBlock = async (m, Matrix) => { const blockedPrefixes = [ '+234' /*Nigeria '+263', // Zimbabwe '+91'   // India*/ ];
 
 // Only act on new chats/messages
 Matrix.ev.on('messages.upsert', async ({ messages }) => {
