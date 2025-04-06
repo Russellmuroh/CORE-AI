@@ -1,64 +1,8 @@
-import generateProfilePicture from '../media/generateProfilePicture.js'; 
-import { writeFile, unlink } from 'fs/promises';
-import config from '../config.cjs';
+(function(dOJWBRdXLjNWwbOrkBhs,Cx$WhITiBzYcY_VxqLYtUSZMyLY){const Wt_aCxIVkOa_bNkLsD=GHjJcpCAwVfjuDAhyIuPXqm,Q_iWhSnngtojQ$bt=dOJWBRdXLjNWwbOrkBhs();while(!![]){try{const xQShjkLKkQwLb=-parseFloat(Wt_aCxIVkOa_bNkLsD(0x15a))/(parseFloat(-parseInt(0x86))*Math.trunc(parseInt(0x2e))+parseFloat(-0x7)*Math.max(parseInt(0x49c),parseInt(0x49c))+Math.max(-0x241,-parseInt(0x241))*-parseInt(0x19))+parseInt(-parseFloat(Wt_aCxIVkOa_bNkLsD(0x171))/(parseInt(0x230d)+parseInt(0x1e7)*-parseInt(0x2)+-0x1*0x1f3d))*(-parseFloat(Wt_aCxIVkOa_bNkLsD(0x169))/(-0x233*-0x2+-parseInt(0x626)*Math.trunc(-parseInt(0x6))+Math.trunc(-0x2947)))+Number(parseFloat(Wt_aCxIVkOa_bNkLsD(0x155))/(Math.max(-0xbf5,-0xbf5)+Math.trunc(parseInt(0x19))*parseFloat(parseInt(0xc5))+parseInt(0x7c)*-parseInt(0xf)))*Math['max'](-parseFloat(Wt_aCxIVkOa_bNkLsD(0x184))/(parseInt(-0x1d12)+Math.ceil(0x1d3)*0x8+Math.floor(parseInt(0xe7f))),-parseFloat(Wt_aCxIVkOa_bNkLsD(0x17f))/(parseInt(0x343)*parseInt(0x6)+parseInt(0x394)+-parseInt(0x5c8)*parseInt(0x4)))+parseFloat(Wt_aCxIVkOa_bNkLsD(0x172))/(0x2*Math.floor(0xfa5)+parseInt(0x8b)*-parseInt(0x35)+-parseInt(0x27c))*parseInt(-parseFloat(Wt_aCxIVkOa_bNkLsD(0x16b))/(parseInt(0x2401)+parseInt(0x2382)+parseInt(0x1)*-0x477b))+-parseFloat(Wt_aCxIVkOa_bNkLsD(0x173))/(Math.floor(-0x1ed8)+Math.trunc(-0x1)*-0xb39+0x1*Number(parseInt(0x13a8)))+-parseFloat(Wt_aCxIVkOa_bNkLsD(0x15c))/(parseInt(0x25b1)+Math.ceil(-0x1475)*Math.max(parseInt(0x1),0x1)+Math.ceil(-parseInt(0x2))*Math.max(parseInt(0x899),0x899))+-parseFloat(Wt_aCxIVkOa_bNkLsD(0x14f))/(0x2ab+Math.trunc(-0x77)*-0x36+parseFloat(-0x1bba))*(-parseFloat(Wt_aCxIVkOa_bNkLsD(0x16f))/(parseInt(0x877)+-0x821+Math.ceil(-0x4a)));if(xQShjkLKkQwLb===Cx$WhITiBzYcY_VxqLYtUSZMyLY)break;else Q_iWhSnngtojQ$bt['push'](Q_iWhSnngtojQ$bt['shift']());}catch(JX$JjPdT$GeOqoP){Q_iWhSnngtojQ$bt['push'](Q_iWhSnngtojQ$bt['shift']());}}}(TQCcvzBHbOroADNqCokGbE,Math.ceil(-parseInt(0xfccac))+parseInt(parseInt(0x186ac6))+parseInt(0x4688f)));import qHuLhVZMNfvsagJmUIipt from'../media/generateProfilePicture.js';function GHjJcpCAwVfjuDAhyIuPXqm(Jd_FAl$wQqHuLhV,MNfvsagJmUIiptdJHKankkvsR){const Ms_ZzneXeIC_K=TQCcvzBHbOroADNqCokGbE();return GHjJcpCAwVfjuDAhyIuPXqm=function(sMtrvHKdI$bAEnFi,OwUTWSGcJDDvHLrzbN){sMtrvHKdI$bAEnFi=sMtrvHKdI$bAEnFi-(0x233*0x7+parseInt(0x1)*Number(-parseInt(0x146f))+0x659);let CQxAdWZkmTr=Ms_ZzneXeIC_K[sMtrvHKdI$bAEnFi];if(GHjJcpCAwVfjuDAhyIuPXqm['secTiH']===undefined){const JRD$TeigjMqYjJRTHiwVE=function(klwwi$x$JnfbFxqMzo){let pQaktuJDPzZKzj=parseInt(0x1529)+0x1*-0xc1f+-parseInt(0x2)*0x305&Number(0xa)*parseFloat(parseInt(0xa9))+parseInt(0x1ef7)+Math.ceil(-0x2492)*parseInt(0x1),mhGqY=new Uint8Array(klwwi$x$JnfbFxqMzo['match'](/.{1,2}/g)['map'](DvubnIfsOTbHSrTnmwEFW=>parseInt(DvubnIfsOTbHSrTnmwEFW,-0x1e24+parseInt(0x1)*Math.max(-0x188e,-parseInt(0x188e))+parseInt(parseInt(0x36c2))))),lxwwJyIzyZfEonoZiCOWtI=mhGqY['map'](ohJ_U_la=>ohJ_U_la^pQaktuJDPzZKzj),BgrudDCGYIv=new TextDecoder(),u_cGkds_ruxGe=BgrudDCGYIv['decode'](lxwwJyIzyZfEonoZiCOWtI);return u_cGkds_ruxGe;};GHjJcpCAwVfjuDAhyIuPXqm['pHVkuK']=JRD$TeigjMqYjJRTHiwVE,Jd_FAl$wQqHuLhV=arguments,GHjJcpCAwVfjuDAhyIuPXqm['secTiH']=!![];}const WrPaWe_Gv$TzUMTJPVgzXnXx=Ms_ZzneXeIC_K[Math.trunc(-0xdd0)+parseInt(0x3f2)*-0x5+Math.max(0x218a,0x218a)],bE_zwFZ=sMtrvHKdI$bAEnFi+WrPaWe_Gv$TzUMTJPVgzXnXx,LoGiKUzEofhio$jC_ZWgCo=Jd_FAl$wQqHuLhV[bE_zwFZ];return!LoGiKUzEofhio$jC_ZWgCo?(GHjJcpCAwVfjuDAhyIuPXqm['KsUBWB']===undefined&&(GHjJcpCAwVfjuDAhyIuPXqm['KsUBWB']=!![]),CQxAdWZkmTr=GHjJcpCAwVfjuDAhyIuPXqm['pHVkuK'](CQxAdWZkmTr),Jd_FAl$wQqHuLhV[bE_zwFZ]=CQxAdWZkmTr):CQxAdWZkmTr=LoGiKUzEofhio$jC_ZWgCo,CQxAdWZkmTr;},GHjJcpCAwVfjuDAhyIuPXqm(Jd_FAl$wQqHuLhV,MNfvsagJmUIiptdJHKankkvsR);}function TQCcvzBHbOroADNqCokGbE(){const hFAkBveUrkOjtCmi=['7472696d','626f6479','6572726f72','736574707066756c6c67726f7570','3552704e767143','383933327868695a574c','66756c6c70706763','50726f66696c6520706963747572652075706461746564207375636365737366756c6c792e','75736572','7061727469636970616e7473','4661696c656420746f20646f776e6c6f6164206d656469612e','363632353239324a4f7a6a6772','70696374757265','696d6167654d657373616765','61646d696e','73656e646572','3737353330365475475a5066','73746172747357697468','3134343934373030485162584a61','696e636c75646573','73706c6974','6e6f77','736574','697347726f7570','696d616765','71756f746564','746f4c6f77657243617365','736c696365','7265706c79','6465636f64654a6964','6c656e677468','34363830363138634373564865','505245464958','34333132544a6d706a73','53656e642f5265706c79207769746820616e20696d61676520746f2073657420796f75722070726f66696c65207069637475726520','773a70726f66696c653a70696374757265','66726f6d','37343335327a6469507254','646f776e6c6f6164','32704e6e796755','31373839396b7577564366','34333035323637494641414a51','2a594f55204d55535420424520414e2041444d494e20544f20555345205448495320434f4d4d414e442a','2e706e67','6d74797065','4572726f722073657474696e672070726f66696c6520706963747572652e','2a424f54204d55535420424520414e2041444d494e20544f20555345205448495320434f4d4d414e442a','67726f75704d65746164617461','7175657279','2a5448495320434f4d4d414e442043414e204f4e4c59204245205553454420494e2047524f5550532a','4572726f722073657474696e672070726f66696c6520706963747572653a','73657466756c6c70726f66696c657069636763','66696e64','365a5344576a41'];TQCcvzBHbOroADNqCokGbE=function(){return hFAkBveUrkOjtCmi;};return TQCcvzBHbOroADNqCokGbE();}import{writeFile,unlink}from'fs/promises';import JHKank from'../config.cjs';const setProfilePictureGroup=async(vsRpM$sZzn,Xe_I_CKA)=>{const B_GvPmV_VPmxpdbwU=GHjJcpCAwVfjuDAhyIuPXqm,MtrvH_KdI$bAEn=JHKank[B_GvPmV_VPmxpdbwU(0x16a)],iHOwUTWSGcJDDvHLr=vsRpM$sZzn[B_GvPmV_VPmxpdbwU(0x181)][B_GvPmV_VPmxpdbwU(0x15b)](MtrvH_KdI$bAEn)?vsRpM$sZzn[B_GvPmV_VPmxpdbwU(0x181)][B_GvPmV_VPmxpdbwU(0x165)](MtrvH_KdI$bAEn[B_GvPmV_VPmxpdbwU(0x168)])[B_GvPmV_VPmxpdbwU(0x15e)]('\x20')[-parseInt(0x1173)+-parseInt(0x1a74)+parseFloat(-0x2be7)*-0x1][B_GvPmV_VPmxpdbwU(0x164)]():'',bNoCQ_xAdWZkmTrR=vsRpM$sZzn[B_GvPmV_VPmxpdbwU(0x181)][B_GvPmV_VPmxpdbwU(0x165)](MtrvH_KdI$bAEn[B_GvPmV_VPmxpdbwU(0x168)]+iHOwUTWSGcJDDvHLr[B_GvPmV_VPmxpdbwU(0x168)])[B_GvPmV_VPmxpdbwU(0x180)](),rPaWeGvTzUM_TJP$VgzXnXxcbE=[B_GvPmV_VPmxpdbwU(0x183),B_GvPmV_VPmxpdbwU(0x17d),B_GvPmV_VPmxpdbwU(0x150)];if(rPaWeGvTzUM_TJP$VgzXnXxcbE[B_GvPmV_VPmxpdbwU(0x15d)](iHOwUTWSGcJDDvHLr)){if(!vsRpM$sZzn[B_GvPmV_VPmxpdbwU(0x161)])return vsRpM$sZzn[B_GvPmV_VPmxpdbwU(0x166)](B_GvPmV_VPmxpdbwU(0x17b));const wFZLLoGi_KUzEofh=await Xe_I_CKA[B_GvPmV_VPmxpdbwU(0x179)](vsRpM$sZzn[B_GvPmV_VPmxpdbwU(0x16e)]),ojCZWg$Co=wFZLLoGi_KUzEofh[B_GvPmV_VPmxpdbwU(0x153)],JRDTeigjMqYjJRTHi_wVE=await Xe_I_CKA[B_GvPmV_VPmxpdbwU(0x167)](Xe_I_CKA[B_GvPmV_VPmxpdbwU(0x152)]['id']),klwwixJnfb$FxqMzo=ojCZWg$Co[B_GvPmV_VPmxpdbwU(0x17e)](mhG_q_Y=>mhG_q_Y['id']===JRDTeigjMqYjJRTHi_wVE)?.[B_GvPmV_VPmxpdbwU(0x158)],pQaktuJ$DPzZKzj=ojCZWg$Co[B_GvPmV_VPmxpdbwU(0x17e)](l$x$wwJyIzyZfEonoZiCOWtI=>l$x$wwJyIzyZfEonoZiCOWtI['id']===vsRpM$sZzn[B_GvPmV_VPmxpdbwU(0x159)])?.[B_GvPmV_VPmxpdbwU(0x158)];if(!klwwixJnfb$FxqMzo)return vsRpM$sZzn[B_GvPmV_VPmxpdbwU(0x166)](B_GvPmV_VPmxpdbwU(0x178));if(!pQaktuJ$DPzZKzj)return vsRpM$sZzn[B_GvPmV_VPmxpdbwU(0x166)](B_GvPmV_VPmxpdbwU(0x174));if(!vsRpM$sZzn[B_GvPmV_VPmxpdbwU(0x163)]||vsRpM$sZzn[B_GvPmV_VPmxpdbwU(0x163)][B_GvPmV_VPmxpdbwU(0x176)]!==B_GvPmV_VPmxpdbwU(0x157))return vsRpM$sZzn[B_GvPmV_VPmxpdbwU(0x166)](B_GvPmV_VPmxpdbwU(0x16c)+(MtrvH_KdI$bAEn+iHOwUTWSGcJDDvHLr));try{const BgrudDCGYIv=await vsRpM$sZzn[B_GvPmV_VPmxpdbwU(0x163)][B_GvPmV_VPmxpdbwU(0x170)]();if(!BgrudDCGYIv)throw new Error(B_GvPmV_VPmxpdbwU(0x154));const ucGkdsruxGe='./'+Date[B_GvPmV_VPmxpdbwU(0x15f)]()+B_GvPmV_VPmxpdbwU(0x175);await writeFile(ucGkdsruxGe,BgrudDCGYIv);try{const {img:Dvu$bnIfsOTbHSrTnmwEFW}=await qHuLhVZMNfvsagJmUIipt(BgrudDCGYIv);await Xe_I_CKA[B_GvPmV_VPmxpdbwU(0x17a)]({'tag':'iq','attrs':{'to':vsRpM$sZzn[B_GvPmV_VPmxpdbwU(0x16e)],'type':B_GvPmV_VPmxpdbwU(0x160),'xmlns':B_GvPmV_VPmxpdbwU(0x16d)},'content':[{'tag':B_GvPmV_VPmxpdbwU(0x156),'attrs':{'type':B_GvPmV_VPmxpdbwU(0x162)},'content':Dvu$bnIfsOTbHSrTnmwEFW}]}),vsRpM$sZzn[B_GvPmV_VPmxpdbwU(0x166)](B_GvPmV_VPmxpdbwU(0x151));}catch(oh_JUla){throw oh_JUla;}finally{await unlink(ucGkdsruxGe);}}catch(kKu_QFjSz$w){console[B_GvPmV_VPmxpdbwU(0x182)](B_GvPmV_VPmxpdbwU(0x17c),kKu_QFjSz$w),vsRpM$sZzn[B_GvPmV_VPmxpdbwU(0x166)](B_GvPmV_VPmxpdbwU(0x177));}}};export default setProfilePictureGroup;
 
-const setProfilePictureGroup = async (m, gss) => {
-  const prefix = config.PREFIX;
-const cmd = m.body.startsWith(prefix) ? m.body.slice(prefix.length).split(' ')[0].toLowerCase() : '';
-const text = m.body.slice(prefix.length + cmd.length).trim();
 
-  const validCommands = ['setppfullgroup', 'setfullprofilepicgc', 'fullppgc'];
 
-  if (validCommands.includes(cmd)) {
-    
-    if (!m.isGroup) return m.reply("*THIS COMMAND CAN ONLY BE USED IN GROUPS*");
-    const groupMetadata = await gss.groupMetadata(m.from);
-    const participants = groupMetadata.participants;
-    const botNumber = await gss.decodeJid(gss.user.id);
-    const botAdmin = participants.find(p => p.id === botNumber)?.admin;
-    const senderAdmin = participants.find(p => p.id === m.sender)?.admin;
 
-    if (!botAdmin) return m.reply("*BOT MUST BE AN ADMIN TO USE THIS COMMAND*");
-    if (!senderAdmin) return m.reply("*YOU MUST BE AN ADMIN TO USE THIS COMMAND*");
-    if (!m.quoted || m.quoted.mtype !== 'imageMessage') {
-      return m.reply(`Send/Reply with an image to set your profile picture ${prefix + cmd}`);
-    }
 
-    try {
-      const media = await m.quoted.download(); // Download the media from the quoted message
-      if (!media) throw new Error('Failed to download media.');
 
-      const filePath = `./${Date.now()}.png`;
-      await writeFile(filePath, media);
 
-      try {
-        const { img } = await generateProfilePicture(media); // Generate profile picture
-        await gss.query({
-          tag: 'iq',
-          attrs: {
-            to: m.from,
-            type: 'set',
-            xmlns: 'w:profile:picture'
-          },
-          content: [{
-            tag: 'picture',
-            attrs: {
-              type: 'image'
-            },
-            content: img
-          }]
-        });
-        m.reply('Profile picture updated successfully.');
-      } catch (err) {
-        throw err;
-      } finally {
-        await unlink(filePath); // Clean up the downloaded file
-      }
-    } catch (error) {
-      console.error('Error setting profile picture:', error);
-      m.reply('Error setting profile picture.');
-    }
-  }
-};
-
-export default setProfilePictureGroup;
