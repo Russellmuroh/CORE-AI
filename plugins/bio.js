@@ -50,7 +50,7 @@ const updateBio = async (Matrix) => {
     const uptime = getUptime();         // Calculate uptime
     const randomQuote = getRandomQuote(); 
 
-    const newBio = `Sarkar-MD Active | ${currentDate} | ${currentTime} | Uptime: ${uptime} | Quote: "${randomQuote}"`;
+    const newBio = `CLOUD AI is Active | ${currentDate} | ${currentTime} | Uptime: ${uptime} | Quote: "${randomQuote}"`;
 
     try {
         await Matrix.updateProfileStatus(newBio);
