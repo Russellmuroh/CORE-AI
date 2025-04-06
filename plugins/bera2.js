@@ -3,7 +3,7 @@ import config from '../config.cjs';
 
 const stickerCommand = async (m, gss) => {
   const body = m.body.trim().toLowerCase();
-  const validCommands = ['sticker', 's', 'autosticker'];
+  const validCommands = ['sticker', 'tosticker', 'autosticker'];
   const trigger = validCommands.find(v => body.startsWith(v));
 
   if (!trigger) return;
@@ -12,7 +12,7 @@ const stickerCommand = async (m, gss) => {
   const arg = text.split(' ')[0];
 
   const packname = global.packname || "CLOUD AI";
-  const author = global.author || "🖤🇵🇰";
+  const author = global.author || "BERA TECH";
 
   if (trigger === 'autosticker') {
     if (arg === 'on') {
