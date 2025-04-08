@@ -14,7 +14,7 @@ import { smsg } from '../lib/myfunc.cjs';
 import { handleAntilink } from './antilink.js';
 import { fileURLToPath } from 'url';
 import { shengChat, shengCommand } from '../lib/shengMode.js'; // Integrated Sheng AI
-import { elementInfo } from './elementInfo.js'; // Import the element info plugin
+import { elementInfo } from '../plugins/elementInfo.js'; // Corrected import for elementInfo plugin
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
