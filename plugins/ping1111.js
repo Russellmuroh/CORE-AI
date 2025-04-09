@@ -21,7 +21,7 @@ class AntiDeleteSystem {
 
     formatTime(timestamp) {
         const options = {
-            timeZone: 'Asia/Karachi',
+            timeZone: 'Africa/Nairobi',  // Set timezone to Kenya/Nairobi
             year: 'numeric',
             month: 'short',
             day: 'numeric',
@@ -30,7 +30,7 @@ class AntiDeleteSystem {
             second: '2-digit',
             hour12: true
         };
-        return new Date(timestamp).toLocaleString('en-PK', options) + ' (PKT)';
+        return new Date(timestamp).toLocaleString('en-KE', options) + ' (EAT)';
     }
 
     destroy() {
@@ -41,9 +41,7 @@ class AntiDeleteSystem {
 const antiDelete = new AntiDeleteSystem();
 
 const AntiDelete = async (m, Matrix) => {
-    const prefix = config.PREFIX;
-    const ownerJid = config.OWNER_NUMBER + '@s.whatsapp.net';
-    const text = m.body?.slice(prefix.length).trim().split(' ') || [];
+    const text = m.body?.trim().toLowerCase().split(' ') || [];
     const cmd = text[0]?.toLowerCase();
     const subCmd = text[1]?.toLowerCase();
 
@@ -66,19 +64,20 @@ const AntiDelete = async (m, Matrix) => {
         return { name: 'Private Chat', isGroup: false };
     };
 
-    // Command handler
+    // Command handler for "antidelete on" and "antidelete off"
     if (cmd === 'antidelete') {
+        const ownerJid = config.OWNER_NUMBER + '@s.whatsapp.net';
+
         if (m.sender !== ownerJid) {
             await m.reply('🚫 *You are not authorized to use this command!*');
             return;
         }
         
         try {
-            const mode = config.DELETE_PATH === "same" ? "Same Chat" : "Owner PM";
             const responses = {
-                on: `🛡️ *ANTI-DELETE ENABLED* 🛡️\n\n🔹 Protection: *ACTIVE*\n🔹 Scope: *All Chats*\n🔹 Cache: *5 minutes*\n🔹 Mode: *${mode}*\n\n✅ Deleted messages will be recovered!`,
-                off: `⚠️ *ANTI-DELETE DISABLED* ⚠️\n\n🔸 Protection: *OFF*\n🔸 Cache cleared\n🔸 Deleted messages will not be recovered.`,
-                help: `⚙️ *ANTI-DELETE SETTINGS* ⚙️\n\n🔹 *${prefix}antidelete on* - Enable\n🔸 *${prefix}antidelete off* - Disable\n\nCurrent Status: ${antiDelete.enabled ? '✅ ACTIVE' : '❌ INACTIVE'}\nCurrent Mode: ${mode}`
+                on: `🛡️ *CLOUD AI ANTIDELETE ENABLED* 🛡️\n\n🔹 Protection: *ACTIVE*\n🔹 Scope: *All Chats*\n🔹 Cache: *5 minutes*\n\n✅ Deleted messages will be recovered!`,
+                off: `⚠️ *CLOUD AI ANTIDELETE DISABLED* ⚠️\n\n🔸 Protection: *OFF*\n🔸 Cache cleared\n🔸 Deleted messages will not be recovered.`,
+                help: `⚙️ *CLOUD AI ANTIDELETE SETTINGS* ⚙️\n\n🔹 *antidelete on* - Enable\n🔸 *antidelete off* - Disable\n\nCurrent Status: ${antiDelete.enabled ? '✅ ACTIVE' : '❌ INACTIVE'}`
             };
 
             if (subCmd === 'on') {
