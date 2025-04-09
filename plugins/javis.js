@@ -6,7 +6,7 @@ const javisHandler = async (m, Matrix) => {
   const chatId = m.isGroup ? m.chat : m.sender;
   const body = m.body.trim();
 
-  // Toggle
+  // Toggle Commands
   if (body.toLowerCase() === 'javis on') {
     javisToggles[chatId] = true;
     return m.reply('Javis has been activated.');
@@ -17,29 +17,33 @@ const javisHandler = async (m, Matrix) => {
     return m.reply('Javis has been deactivated.');
   }
 
-  // Not toggled on
+  // If not toggled on, skip
   if (!javisToggles[chatId]) return;
 
-  // Trigger check
+  // Trigger word "javis" (non-prefix, case-insensitive)
   const lowerBody = body.toLowerCase();
   if (!lowerBody.startsWith('javis')) return;
 
-  const query = body.slice(5).trim();
+  const query = body.slice(5).trim(); // Remove "javis"
   if (!query) return m.reply('Yes?');
 
   try {
-    await m.React('🕐');
+    await m.React('⏳');
 
-    const res = await axios.get(`https://bk9.fun/ai/jeeves-chat?q=${encodeURIComponent(query)}`);
-    const result = res.data?.response || 'No response.';
+    // 1. Get AI reply
+    const aiRes = await axios.get(`https://bk9.fun/ai/jeeves-chat?q=${encodeURIComponent(query)}`);
+    const replyText = aiRes.data?.response || 'No response.';
 
-    await m.reply(result);
+    // 2. Send the text reply FIRST
+    await m.reply(replyText);
 
-    // Get TTS audio buffer
-    const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q=${encodeURIComponent(result)}`;
-    const ttsRes = await axios.get(ttsUrl, { responseType: 'arraybuffer' });
+    // 3. Fetch TTS voice from Google
+    const ttsRes = await axios.get(
+      `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q=${encodeURIComponent(replyText)}`,
+      { responseType: 'arraybuffer' }
+    );
 
-    // Send voice note (PTT)
+    // 4. Send audio reply (voice note / PTT)
     await Matrix.sendMessage(m.chat, {
       audio: Buffer.from(ttsRes.data),
       mimetype: 'audio/mpeg',
@@ -47,9 +51,9 @@ const javisHandler = async (m, Matrix) => {
     }, { quoted: m });
 
     await m.React('✅');
-  } catch (error) {
-    console.error('Javis Error:', error.message);
-    await m.reply('Failed to respond with voice.');
+  } catch (err) {
+    console.error('Javis error:', err.message);
+    await m.reply('Javis encountered an error.');
     await m.React('❌');
   }
 };
