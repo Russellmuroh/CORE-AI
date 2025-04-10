@@ -1,35 +1,46 @@
 import axios from 'axios';
-import config from '../../config.cjs';
 
-const handler = async (m, { body, sender, sendMessage, React }) => {
-  const text = body?.trim();
-  const trigger = ['bing', 'create'];
-  const isTrigger = trigger.some(word => text?.toLowerCase().startsWith(word));
-  const isBotOwner = sender === config.OWNER_NUMBER + '@s.whatsapp.net';
+class BingImageSystem {
+    constructor() {
+        this.triggerWords = ['bing', 'create'];
+    }
 
-  if (!isTrigger || !isBotOwner) return;
+    isTrigger(message) {
+        const text = message?.body?.trim().toLowerCase();
+        return this.triggerWords.some(word => text?.startsWith(word));
+    }
 
-  const input = text.split(' ').slice(1).join(' ');
-  if (!input) return m.reply('Please provide a prompt. Example:\n\n*bing futuristic city*');
+    async handleMessage(m, Matrix) {
+        if (!this.isTrigger(m)) return;
 
-  try {
-    await m.React('⏳');
-    const url = `https://aemt.me/bingimg?text=${encodeURIComponent(input)}`;
-    await sendMessage(m.chat, {
-      image: { url },
-      caption: `🧠 *Bing AI Image Generator*\n\n🎨 *Prompt:* ${input}`
-    });
-    await m.React('✅');
-  } catch (e) {
-    console.error('Bing image error:', e);
-    await m.reply('Failed to generate image. Try again later.');
-    await m.React('❌');
-  }
+        const [trigger, ...queryParts] = m.body.trim().split(/\s+/);
+        const query = queryParts.join(' ');
+
+        if (!query) {
+            await m.reply('Please provide a prompt to create an image.');
+            return;
+        }
+
+        try {
+            await m.React('⏳');
+            const url = `https://aemt.me/bingimg?text=${encodeURIComponent(query)}`;
+            await Matrix.sendMessage(m.chat, {
+                image: { url },
+                caption: `🐝*AI-Generated Image for:* _${query}_`
+            }, { quoted: m });
+            await m.React('✅');
+        } catch (error) {
+            console.error('Bing image fetch error:', error);
+            await m.reply('Error generating image. Try again later.');
+            await m.React('❌');
+        }
+    }
+}
+
+const bingImage = new BingImageSystem();
+
+const BingImageHandler = async (m, Matrix) => {
+    await bingImage.handleMessage(m, Matrix);
 };
 
-export default handler;
-
-handler.command = /^bing|create$/i;
-handler.help = ['bing <text>', 'create <text>'];
-handler.tags = ['ai', 'image'];
-handler.bot = true; // Only the bot user can trigger it
+export default BingImageHandler;
