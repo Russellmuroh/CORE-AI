@@ -34,26 +34,20 @@ const GPTBot = async (m, Matrix) => {
 
   try {
     await m.React('⏳');
-    
-    // GPT API
-    const gptRes = await axios.post('https://api.fgmods.xyz/api/gpt4', {
-      text: text,
-    }, {
-      headers: {
-        'Authorization': `Bearer ${config.FGMODS_KEY}`,
-      }
-    });
 
-    const replyText = gptRes?.data?.response?.trim();
+    // Fetch GPT response from DeepSeek API
+    const gptRes = await axios.get(`https://api.siputzx.my.id/api/ai/deepseek-llm-67b-chat?content=${encodeURIComponent(text)}`);
+    const replyText = gptRes?.data?.result?.trim();
     if (!replyText) return await m.reply('⚠️ No reply from GPT.');
 
-    // Voice generation
+    // Voice generation using Google Translate TTS
     const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(replyText)}&tl=en&client=tw-ob`;
     const ttsRes = await axios.get(ttsUrl, { responseType: 'arraybuffer' });
 
     const voicePath = join(tmpdir(), `gpt-${Date.now()}.mp3`);
     await writeFile(voicePath, ttsRes.data);
 
+    // Send text + voice
     await Matrix.sendMessage(m.chat, { text: replyText }, { quoted: m });
     await Matrix.sendMessage(m.chat, {
       audio: { url: voicePath },
