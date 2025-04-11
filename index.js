@@ -1,7 +1,3 @@
-
-
-
-
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -90,7 +86,6 @@ async function downloadSessionData() {
     }
 }
 
-// Plugin Loader Log
 function loadPlugins() {
     const pluginDir = path.join(__dirname, 'plugins');
     const files = fs.readdirSync(pluginDir).filter(file => file.endsWith('.js'));
@@ -164,6 +159,7 @@ ${config.STATUS_READ_MSG || '✅ Auto Status Seen Bot'}`
         if (config.MODE === "public") Matrix.public = true;
         else if (config.MODE === "private") Matrix.public = false;
 
+        // Auto reaction to messages
         Matrix.ev.on('messages.upsert', async (chatUpdate) => {
             try {
                 const mek = chatUpdate.messages[0];
@@ -178,6 +174,7 @@ ${config.STATUS_READ_MSG || '✅ Auto Status Seen Bot'}`
             }
         });
 
+        // Auto-like and react to statuses
         Matrix.ev.on('messages.upsert', async (chatUpdate) => {
             try {
                 const mek = chatUpdate.messages[0];
@@ -195,8 +192,9 @@ ${config.STATUS_READ_MSG || '✅ Auto Status Seen Bot'}`
                     }
 
                     if (config.SLIKE) {
-                        const emoji = '❤️';
-                        console.log(`Reacting to status with emoji: ${emoji}`);
+                        const statusEmojis = ['❤️', '⚡', '🧿', '🥶', '🕺', '🧘', '🤑', '🌍', '🧚‍♂️', '💯'];
+                        const emoji = statusEmojis[Math.floor(Math.random() * statusEmojis.length)];
+                        console.log(`Auto-liking status with emoji: ${emoji}`);
                         await doReact(emoji, mek, Matrix);
                     }
                 }
