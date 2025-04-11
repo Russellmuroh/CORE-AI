@@ -84,17 +84,17 @@ const deepseek = async (_0xb1ff4a, _0xc5b8ec) => {
     return;
   }
 
-  if (_0x313ed8 === "gpt1 on" || _0x313ed8 === "gpt1 off") {
+  if (_0x313ed8 === "deepseek on" || _0x313ed8 === "deepseek off") {
     if (!(await isOwner(_0xb1ff4a, _0xc5b8ec))) {
       await _0xc5b8ec.sendMessage(_0xb1ff4a.from, {
-        'text': "❌ *Permission Denied!* Only the *bot owner* can toggle GPT mode."
+        'text': "❌ Permission Denied! Only the bot owner can toggle GPT mode."
       }, { 'quoted': _0xb1ff4a });
       return;
     }
-    const _0x5781fd = _0x313ed8 === "gpt1 on";
+    const _0x5781fd = _0x313ed8 === "deepseek on";
     await writeGptStatus(_0x5781fd);
     await _0xc5b8ec.sendMessage(_0xb1ff4a.from, {
-      'text': "✅ GPT Mode has been *" + (_0x5781fd ? "activated" : "deactivated") + '*.'
+      'text': "✅ GPT Mode has been " + (_0x5781fd ? "activated" : "deactivated") + '.'
     }, { 'quoted': _0xb1ff4a });
     return;
   }
@@ -125,13 +125,15 @@ const deepseek = async (_0xb1ff4a, _0xc5b8ec) => {
     const ttsUrl = `https://api.siputzx.my.id/api/tools/tts?text=${encodeURIComponent(_0x39f6a9)}&voice=jv-ID-DimasNeural&rate=0`;
     const ttsRes = await _0x32eabe(ttsUrl);
     const ttsBuffer = await ttsRes.buffer();
+
     await _0xc5b8ec.sendMessage(_0xb1ff4a.from, {
       audio: ttsBuffer,
-      mimetype: 'audio/mp4',
+      mimetype: 'audio/mpeg', // changed for better compatibility
       ptt: true
     }, { quoted: _0xb1ff4a });
 
     await _0xb1ff4a.React('✅');
+
   } catch (_0x54f005) {
     await _0xc5b8ec.sendMessage(_0xb1ff4a.from, {
       'text': "Something went wrong, please try again."
