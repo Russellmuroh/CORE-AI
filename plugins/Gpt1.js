@@ -1,66 +1,58 @@
-import pkg from '@whiskeysockets/baileys';
-const { default: axios } = await import('axios');
-const { writeFile } = await import('fs/promises');
-const { tmpdir } = await import('os');
-const { join } = await import('path');
-const { proto } = pkg;
-import config from '../../config.cjs';
+import axios from 'axios';
 
-let GPT_MODE = false;
+let gptMode = false; // Tracks whether GPT mode is active or not
 
-const GPTBot = async (m, Matrix) => {
-  const text = m.body?.trim();
-  if (!text) return;
-
-  const sender = m.sender;
-  const isOwner = sender === `${config.OWNER_NUMBER}@s.whatsapp.net`;
-  const lowerText = text.toLowerCase();
-
-  if (lowerText === 'gpt1 on' && isOwner) {
-    GPT_MODE = true;
-    await m.reply('✅ *GPT Mode activated.*\nI will now respond to any message.');
-    await m.React('✅');
-    return;
+const gptCommandHandler = async (m, { conn, text }) => {
+  // Toggle the GPT mode
+  if (text.toLowerCase() === 'gpt1 on') {
+    gptMode = true;
+    return m.reply('GPT mode is now ON! I will respond with both text and voice.');
+  } else if (text.toLowerCase() === 'gpt1 off') {
+    gptMode = false;
+    return m.reply('GPT mode is now OFF! I will no longer respond with voice.');
   }
 
-  if (lowerText === 'gpt1 off' && isOwner) {
-    GPT_MODE = false;
-    await m.reply('❌ *GPT Mode deactivated.*\nI will stop responding to messages.');
-    await m.React('✅');
-    return;
-  }
+  // If GPT mode is on, process the message
+  if (gptMode) {
+    try {
+      const responseText = await fetchGPT3Response(m.body);
+      await m.reply(responseText); // Send the text response
 
-  if (!GPT_MODE) return;
+      const audioBuffer = await fetchTTSAudio(responseText);
+      await conn.sendMessage(m.chat, audioBuffer, 'audio', { mimetype: 'audio/mp4', ptt: true }); // Send the voice response
 
-  try {
-    await m.React('⏳');
-
-    // Fetch GPT response from DeepSeek API
-    const gptRes = await axios.get(`https://api.siputzx.my.id/api/ai/deepseek-llm-67b-chat?content=${encodeURIComponent(text)}`);
-    const replyText = gptRes?.data?.result?.trim();
-    if (!replyText) return await m.reply('⚠️ No reply from GPT.');
-
-    // Voice generation using Google Translate TTS
-    const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(replyText)}&tl=en&client=tw-ob`;
-    const ttsRes = await axios.get(ttsUrl, { responseType: 'arraybuffer' });
-
-    const voicePath = join(tmpdir(), `gpt-${Date.now()}.mp3`);
-    await writeFile(voicePath, ttsRes.data);
-
-    // Send text + voice
-    await Matrix.sendMessage(m.chat, { text: replyText }, { quoted: m });
-    await Matrix.sendMessage(m.chat, {
-      audio: { url: voicePath },
-      mimetype: 'audio/mp4',
-      ptt: true
-    }, { quoted: m });
-
-    await m.React('✅');
-  } catch (err) {
-    console.error('GPT Bot Error:', err);
-    await m.reply('❌ Error generating response.');
-    await m.React('❌');
+      await m.react('✅'); // Mark message as processed
+    } catch (error) {
+      console.error('Error with GPT or TTS:', error);
+      await m.reply('Sorry, something went wrong while generating the response.');
+      await m.react('❌');
+    }
   }
 };
 
-export default GPTBot;
+// Function to fetch GPT-3 response
+const fetchGPT3Response = async (message) => {
+  const apiUrl = `https://api.siputzx.my.id/api/ai/gpt3?prompt=kamu%20adalah%20ai%20yang%20ceria&content=${encodeURIComponent(message)}`;
+  try {
+    const response = await axios.get(apiUrl);
+    return response.data.response || 'Sorry, I couldn\'t understand that.';
+  } catch (error) {
+    console.error('Error fetching GPT response:', error);
+    return 'Sorry, I couldn\'t fetch a response from GPT.';
+  }
+};
+
+// Function to fetch TTS audio for the response
+const fetchTTSAudio = async (text) => {
+  const apiUrl = `https://api.siputzx.my.id/api/tools/tts?text=${encodeURIComponent(text)}&voice=jv-ID-DimasNeural&rate=0%&pitch=0Hz&volume=0%`;
+  try {
+    const response = await axios.get(apiUrl, { responseType: 'arraybuffer' });
+    return Buffer.from(response.data); // Return audio buffer
+  } catch (error) {
+    console.error('Error fetching TTS audio:', error);
+    throw new Error('Failed to generate voice response.');
+  }
+};
+
+// Export the command handler
+export default gptCommandHandler;
