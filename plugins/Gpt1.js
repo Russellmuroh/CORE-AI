@@ -1,58 +1,75 @@
-import axios from 'axios';
+const deepseek = async (_0xb1ff4a, _0xc5b8ec) => {
+  const _0x212210 = _0x44694a;
+  const _0x36c6f9 = await readGptStatus();
+  const _0x3abcfa = await readChatHistory();
+  const _0x313ed8 = _0xb1ff4a[_0x212210(0x178)][_0x212210(0x193)]()[_0x212210(0x18f)]();
 
-let gptMode = false; // Tracks whether GPT mode is active or not
-
-const gptCommandHandler = async (m, { conn, text }) => {
-  // Toggle the GPT mode
-  if (text.toLowerCase() === 'gpt1 on') {
-    gptMode = true;
-    return m.reply('GPT mode is now ON! I will respond with both text and voice.');
-  } else if (text.toLowerCase() === 'gpt1 off') {
-    gptMode = false;
-    return m.reply('GPT mode is now OFF! I will no longer respond with voice.');
+  if (_0x313ed8 === _0x212210(0x18a) || _0x313ed8 === 'what are you') {
+    await _0xc5b8ec[_0x212210(0x168)](_0xb1ff4a['from'], { 'text': _0x212210(0x16a) }, { 'quoted': _0xb1ff4a });
+    return;
   }
 
-  // If GPT mode is on, process the message
-  if (gptMode) {
-    try {
-      const responseText = await fetchGPT3Response(m.body);
-      await m.reply(responseText); // Send the text response
+  if (_0x313ed8 === _0x212210(0x174)) {
+    await deleteChatHistory(_0x3abcfa, _0xb1ff4a[_0x212210(0x198)]);
+    await _0xc5b8ec['sendMessage'](_0xb1ff4a['from'], { 'text': _0x212210(0x17f) }, { 'quoted': _0xb1ff4a });
+    return;
+  }
 
-      const audioBuffer = await fetchTTSAudio(responseText);
-      await conn.sendMessage(m.chat, audioBuffer, 'audio', { mimetype: 'audio/mp4', ptt: true }); // Send the voice response
-
-      await m.react('✅'); // Mark message as processed
-    } catch (error) {
-      console.error('Error with GPT or TTS:', error);
-      await m.reply('Sorry, something went wrong while generating the response.');
-      await m.react('❌');
+  if (_0x313ed8 === _0x212210(0x197) || _0x313ed8 === 'gpt1 off') {
+    if (!await isOwner(_0xb1ff4a, _0xc5b8ec)) {
+      await _0xc5b8ec['sendMessage'](_0xb1ff4a[_0x212210(0x182)], { 'text': _0x212210(0x177) }, { 'quoted': _0xb1ff4a });
+      return;
     }
-  }
-};
 
-// Function to fetch GPT-3 response
-const fetchGPT3Response = async (message) => {
-  const apiUrl = `https://api.siputzx.my.id/api/ai/gpt3?prompt=kamu%20adalah%20ai%20yang%20ceria&content=${encodeURIComponent(message)}`;
+    const _0x5781fd = _0x313ed8 === 'gpt1 on';
+    await writeGptStatus(_0x5781fd);
+    await _0xc5b8ec[_0x212210(0x168)](
+      _0xb1ff4a[_0x212210(0x182)],
+      { 'text': '✅ GPT Mode has been *' + (_0x5781fd ? _0x212210(0x16d) : _0x212210(0x195)) + '*.' },
+      { 'quoted': _0xb1ff4a }
+    );
+    return;
+  }
+
+  if (!_0x36c6f9['enabled']) return;
+
+  if (_0x313ed8 === _0x212210(0x196)) {
+    await _0xc5b8ec[_0x212210(0x168)](_0xb1ff4a[_0x212210(0x182)], { 'text': _0x212210(0x189) }, { 'quoted': _0xb1ff4a });
+    return;
+  }
+
   try {
-    const response = await axios.get(apiUrl);
-    return response.data.response || 'Sorry, I couldn\'t understand that.';
-  } catch (error) {
-    console.error('Error fetching GPT response:', error);
-    return 'Sorry, I couldn\'t fetch a response from GPT.';
+    await _0xb1ff4a[_0x212210(0x191)]('💻');
+    const _0x5dfdd2 = _0x3abcfa[_0xb1ff4a[_0x212210(0x198)]] || [],
+          _0x182f39 = [{ 'role': _0x212210(0x183), 'content': deepSeekSystemPrompt }, ..._0x5dfdd2, { 'role': _0x212210(0x186), 'content': _0x313ed8 }],
+          _0x22414c = _0x212210(0x17e) + encodeURIComponent(_0x313ed8),
+          _0xc04951 = await _0x32eabe(_0x22414c);
+
+    if (!_0xc04951['ok']) throw new Error(_0x212210(0x16c) + _0xc04951[_0x212210(0x173)]);
+
+    const _0x388774 = await _0xc04951[_0x212210(0x16e)](),
+          _0x39f6a9 = _0x388774['data'];
+
+    await updateChatHistory(_0x3abcfa, _0xb1ff4a[_0x212210(0x198)], { 'role': _0x212210(0x186), 'content': _0x313ed8 });
+    await updateChatHistory(_0x3abcfa, _0xb1ff4a[_0x212210(0x198)], { 'role': _0x212210(0x185), 'content': _0x39f6a9 });
+
+    // Send text reply
+    await _0xc5b8ec[_0x212210(0x168)](_0xb1ff4a[_0x212210(0x182)], { 'text': _0x39f6a9 }, { 'quoted': _0xb1ff4a });
+
+    // Send TTS voice message
+    const ttsURL = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(_0x39f6a9)}&tl=en&client=tw-ob`;
+    const audioBuffer = await (await _0x32eabe(ttsURL)).buffer();
+
+    await _0xc5b8ec.sendMessage(_0xb1ff4a[_0x212210(0x182)], {
+      audio: audioBuffer,
+      mimetype: 'audio/mp4',
+      ptt: true
+    }, { quoted: _0xb1ff4a });
+
+    await _0xb1ff4a[_0x212210(0x191)]('✅');
+  } catch (_0x54f005) {
+    await _0xc5b8ec[_0x212210(0x168)](_0xb1ff4a[_0x212210(0x182)], { 'text': _0x212210(0x180) }, { 'quoted': _0xb1ff4a });
+    console[_0x212210(0x17b)]('Error fetching response:', _0x54f005);
+    await _0xb1ff4a[_0x212210(0x191)]('❌');
   }
 };
-
-// Function to fetch TTS audio for the response
-const fetchTTSAudio = async (text) => {
-  const apiUrl = `https://api.siputzx.my.id/api/tools/tts?text=${encodeURIComponent(text)}&voice=jv-ID-DimasNeural&rate=0%&pitch=0Hz&volume=0%`;
-  try {
-    const response = await axios.get(apiUrl, { responseType: 'arraybuffer' });
-    return Buffer.from(response.data); // Return audio buffer
-  } catch (error) {
-    console.error('Error fetching TTS audio:', error);
-    throw new Error('Failed to generate voice response.');
-  }
-};
-
-// Export the command handler
-export default gptCommandHandler;
