@@ -1,26 +1,18 @@
-const banUserHandler = async (m, { conn, usedPrefix, command }) => {
-  let who;
-  if (m.isGroup) {
-    who = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : false;
-  } else {
-    who = m.chat;
-  }
+const BanUser = async (m, { conn }) => {
+  const body = m.body.toLowerCase();
+  if (!body.startsWith("ban") || !m.key.fromMe) return;
 
-  if (!who) {
-    return m.reply(`✳️ Tag or mention someone\n\n📌 Example : ${usedPrefix + command} @user`);
-  }
+  const who = m.mentionedJid?.[0] || (m.quoted ? m.quoted.sender : null);
+  if (!who) return m.reply("✳️ *Tag or mention someone to ban.*\n\nExample: ban @user");
 
-  // Ban the mentioned user
   global.db.data.users[who].banned = true;
 
-  // Send confirmation
-  await conn.reply(
-    m.chat,
-    `✅ BANNED\n\n───────────\n@${who.split`@`[0]} you will no longer be able to use my commands.`,
-    m,
-    { mentions: [who] }
-  );
-  await m.react('✅');
+  await conn.sendMessage(m.chat, {
+    text: `✅ *User Banned Successfully*\n\n@${who.split("@")[0]} will no longer be able to use my commands.`,
+    mentions: [who]
+  });
+
+  await m.react("✅");
 };
 
-export default banUserHandler;
+export default BanUser;
