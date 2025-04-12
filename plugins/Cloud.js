@@ -1,50 +1,53 @@
-import fetch from 'node-fetch'
+import fetch from 'node-fetch';
 
-const LyricsDownloader = async (m, conn) => {
-  const body = m.body?.toLowerCase()
-  if (!['lyrics', 'lyric'].some(x => body.startsWith(x)) || !m.key.fromMe) return
+const LyricsFetcher = async (m, { conn }) => {
+  const body = m.body.toLowerCase();
+  if (!m.key.fromMe || !body.startsWith('lyrics') && !body.startsWith('lyric')) return;
 
-  const query = body.replace(/^(lyrics|lyric)/i, '').trim()
-  if (!query) return m.reply('✳️ *Please provide a song title.*\n\n📌 Example: `lyrics Faded`')
+  const query = m.body.slice(body.startsWith('lyrics') ? 6 : 5).trim();
+  if (!query) return m.reply('❌ *Please provide a song title.*\n\nExample: `lyrics faded`');
 
-  await m.react('🎵')
+  await m.react('🎵');
 
   try {
     // Fetch lyrics
-    const res = await fetch(`https://api.dreaded.site/api/lyrics?title=${encodeURIComponent(query)}`)
-    const json = await res.json()
+    const lyricsRes = await fetch(`https://api.dreaded.site/api/lyrics?title=${encodeURIComponent(query)}`);
+    const lyricsData = await lyricsRes.json();
 
-    if (!json || !json.lyrics) {
-      await m.react('❌')
-      return m.reply(`❌ *No lyrics found for:* ${query}`)
+    if (!lyricsData?.lyrics) {
+      await m.react('❌');
+      return m.reply(`❌ *Lyrics not found for:* ${query}`);
     }
 
-    // Download music
-    const ytRes = await fetch(`https://apis.davidcyriltech.my.id/download/ytmp3?url=https://youtube.com/results?search_query=${encodeURIComponent(query)}`)
-    const ytData = await ytRes.json()
-    const audioUrl = ytData?.result?.url_audio
+    await m.reply(`🎼 *Lyrics for:* ${lyricsData.title || query}\n\n${lyricsData.lyrics}`);
+    
+    // Fetch and send audio
+    const ytSearch = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)} song`;
+    const ytidRes = await fetch(`https://noembed.com/embed?url=${ytSearch}`);
+    const yturl = ytidRes.url || `https://youtube.com/watch?v=60ItHLz5WEA`; // fallback
 
-    const caption = `🎧 *Lyrics for:* ${json.title || query}\n\n${json.lyrics.slice(0, 4000)}`
-    await m.reply(caption)
+    const musicRes = await fetch(`https://apis.davidcyriltech.my.id/download/ytmp3?url=${yturl}`);
+    const music = await musicRes.json();
 
-    if (audioUrl) {
-      await conn.sendMessage(m.chat, {
-        audio: { url: audioUrl },
-        mimetype: 'audio/mpeg',
-        ptt: false,
-        fileName: `${json.title || query}.mp3`,
-      }, { quoted: m })
-    } else {
-      await m.reply('⚠️ Audio not found or failed to fetch.')
+    if (!music?.result?.url) {
+      await m.react('❌');
+      return m.reply(`❌ *Unable to download audio for:* ${query}`);
     }
 
-    await m.react('✅')
+    await conn.sendMessage(m.chat, {
+      audio: { url: music.result.url },
+      mimetype: 'audio/mpeg',
+      ptt: false,
+      fileName: 'Core AI'
+    }, { quoted: m });
 
-  } catch (err) {
-    console.error(err)
-    await m.react('❌')
-    await m.reply('❌ *An error occurred while fetching lyrics or music.*')
+    await m.react('✅');
+
+  } catch (e) {
+    console.error('Lyrics/Music Fetch Error:', e);
+    await m.react('❌');
+    m.reply('❌ *An error occurred while fetching data.*');
   }
-}
+};
 
-export default LyricsDownloader
+export default LyricsFetcher;
