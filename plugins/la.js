@@ -9,49 +9,80 @@
 
 
 import axios from 'axios';
-import pkg, { prepareWAMessageMedia } from '@whiskeysockets/baileys';
+import pkg from '@whiskeysockets/baileys';
 const { generateWAMessageFromContent, proto } = pkg;
 import config from '../config.cjs';
 
-let gtechLyrics = async (m, Matrix) => {
-  const trigger = m.body.toLowerCase().startsWith('lyrics') || m.body.toLowerCase().startsWith('lyric');
-  if (!trigger || m.key.fromMe !== true) return;
+const LyricsFinder = async (m, Matrix) => {
+  const body = m.body.toLowerCase();
+  if (!['lyrics', 'lyric'].some(t => body.startsWith(t)) || !m.key.fromMe) return;
 
-  const text = m.body.replace(/^(?i)lyrics|lyric/i, '').trim();
-  if (!text) return m.reply(`Hello *${m.pushName}*,\nPlease provide a song title.\n\nExample: \nlyrics juice wrld easy to quit`);
+  const query = m.body.replace(/^(?i)lyrics|lyric/i, '').trim();
+  if (!query) return m.reply(`Hey *${m.pushName}*, please provide a song name.\n\nExample:\nlyrics Tapera`);
 
   try {
     await m.react('🎶');
+    await m.reply(`Looking for lyrics to *${query}*...`);
 
-    // Animated progress countdown in one message
-    let countdown = await Matrix.sendMessage(m.chat, { text: 'Fetching Lyrics... 10%' }, { quoted: m });
-    const updateProgress = async (percent) => {
-      await Matrix.sendMessage(m.chat, { edit: countdown.key, text: `Fetching Lyrics... ${percent}%` });
-    };
+    const api = `https://api.agatz.xyz/api/lirik?message=${encodeURIComponent(query)}`;
+    const { data } = await axios.get(api);
+    const res = data?.result;
 
-    for (let p = 20; p <= 100; p += 10) {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      await updateProgress(p);
-    }
-
-    const apiUrl = `https://gtech-api-xtp1.onrender.com/api/music/lyrics?query=${encodeURIComponent(text)}&apikey=APIKEY`;
-    const { data } = await axios.get(apiUrl);
-
-    if (!data || !data.result) {
-      await m.reply('No lyrics found.');
+    if (!res || !res.lirik) {
+      await m.reply('Lyrics not found. Try another song name.');
+      await m.react('❌');
       return;
     }
 
-    const lyrics = `*Title:* ${data.result.title}\n*Artist:* ${data.result.artist}\n\n${data.result.lyrics}`;
+    const text = `*Title:* ${res.title || query}\n\n${res.lirik}`;
 
-    await Matrix.sendMessage(m.chat, { text: lyrics }, { quoted: m });
+    const msg = generateWAMessageFromContent(m.chat, {
+      viewOnceMessage: {
+        message: {
+          messageContextInfo: { deviceListMetadataVersion: 2, deviceListMetadata: {} },
+          interactiveMessage: proto.Message.InteractiveMessage.create({
+            body: { text },
+            footer: { text: '> Powered by CLOUD AI' },
+            header: { title: '', subtitle: '', hasMediaAttachment: false },
+            nativeFlowMessage: {
+              buttons: [
+                {
+                  name: 'cta_copy',
+                  buttonParamsJson: JSON.stringify({
+                    display_text: '📋 Copy Lyrics',
+                    id: 'copy_lyrics',
+                    copy_code: res.lirik
+                  })
+                },
+                {
+                  name: 'cta_url',
+                  buttonParamsJson: JSON.stringify({
+                    display_text: 'Follow Channel',
+                    url: 'https://whatsapp.com/channel/0029VajJoCoLI8YePbpsnE3q'
+                  })
+                },
+                {
+                  name: 'quick_reply',
+                  buttonParamsJson: JSON.stringify({
+                    display_text: 'Main Menu',
+                    id: '.menu'
+                  })
+                }
+              ]
+            }
+          })
+        }
+      }
+    }, {});
+
+    await Matrix.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
     await m.react('✅');
 
-  } catch (err) {
-    console.error('Lyrics Error:', err.message);
-    await m.reply('Failed to fetch lyrics.');
+  } catch (e) {
+    console.error('Lyrics fetch error:', e.message);
+    await m.reply('Something went wrong while fetching lyrics.');
     await m.react('❌');
   }
 };
 
-export default gtechLyrics;
+export default LyricsFinder;
