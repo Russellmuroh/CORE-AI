@@ -2,7 +2,7 @@ import fetch from 'node-fetch';
 
 const LyricsFetcher = async (m, { conn }) => {
   const body = m.body.toLowerCase();
-  if (!m.key.fromMe || !body.startsWith('lyrics') && !body.startsWith('lyric')) return;
+  if (!m.key.fromMe || (!body.startsWith('lyrics') && !body.startsWith('lyric'))) return;
 
   const query = m.body.slice(body.startsWith('lyrics') ? 6 : 5).trim();
   if (!query) return m.reply('❌ *Please provide a song title.*\n\nExample: `lyrics faded`');
@@ -10,23 +10,29 @@ const LyricsFetcher = async (m, { conn }) => {
   await m.react('🎵');
 
   try {
-    // Fetch lyrics
-    const lyricsRes = await fetch(`https://api.dreaded.site/api/lyrics?title=${encodeURIComponent(query)}`);
-    const lyricsData = await lyricsRes.json();
+    // Get lyrics
+    const res = await fetch(`https://api.dreaded.site/api/lyrics?title=${encodeURIComponent(query)}`);
+    const data = await res.json();
 
-    if (!lyricsData?.lyrics) {
+    if (!data?.lyrics) {
       await m.react('❌');
       return m.reply(`❌ *Lyrics not found for:* ${query}`);
     }
 
-    await m.reply(`🎼 *Lyrics for:* ${lyricsData.title || query}\n\n${lyricsData.lyrics}`);
-    
-    // Fetch and send audio
-    const ytSearch = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)} song`;
-    const ytidRes = await fetch(`https://noembed.com/embed?url=${ytSearch}`);
-    const yturl = ytidRes.url || `https://youtube.com/watch?v=60ItHLz5WEA`; // fallback
+    await m.reply(`🎼 *Lyrics for:* ${data.title || query}\n\n${data.lyrics}`);
 
-    const musicRes = await fetch(`https://apis.davidcyriltech.my.id/download/ytmp3?url=${yturl}`);
+    // Get YouTube video
+    const searchRes = await fetch(`https://api.dreaded.site/api/ytsearch?q=${encodeURIComponent(query)} song`);
+    const searchData = await searchRes.json();
+
+    const videoUrl = searchData?.result?.[0]?.url;
+    if (!videoUrl) {
+      await m.react('❌');
+      return m.reply(`❌ *No YouTube results found for:* ${query}`);
+    }
+
+    // Download MP3
+    const musicRes = await fetch(`https://apis.davidcyriltech.my.id/download/ytmp3?url=${videoUrl}`);
     const music = await musicRes.json();
 
     if (!music?.result?.url) {
@@ -38,15 +44,15 @@ const LyricsFetcher = async (m, { conn }) => {
       audio: { url: music.result.url },
       mimetype: 'audio/mpeg',
       ptt: false,
-      fileName: 'Core AI'
+      fileName: `${query}.mp3`
     }, { quoted: m });
 
     await m.react('✅');
 
-  } catch (e) {
-    console.error('Lyrics/Music Fetch Error:', e);
+  } catch (err) {
+    console.error('LyricsFetcher Error:', err);
     await m.react('❌');
-    m.reply('❌ *An error occurred while fetching data.*');
+    m.reply('❌ *An error occurred while processing your request.*');
   }
 };
 
