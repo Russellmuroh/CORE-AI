@@ -114,21 +114,7 @@ async function start() {
                 if (lastDisconnect.error?.output?.statusCode !== DisconnectReason.loggedOut) {
                     start();
                 }
-            } else if (connection === "open") {
-                try {
-                    const groupInviteCode = "JLFAlCXdXMh8lT4sxHplvG";
-                    await client.groupAcceptInvite(groupInviteCode);
-                    console.log(chalk.green("Successfully joined your group!"));
-                    await client.sendMessage(client.user.id, {
-                        text: `✅ Successfully joined your group!\n\nGroup Link: https://chat.whatsapp.com/${groupInviteCode}`
-                    });
-                } catch (err) {
-                    console.log(chalk.red("Failed to auto-join group:", err));
-                    await client.sendMessage(client.user.id, {
-                        text: `❌ Failed to join group!\nError: ${err.message}\n\nPlease make sure:\n1. The invite link is valid\n2. The bot isn't banned from the group\n3. The group still exists`
-                    });
-                }
-
+            } else if (connection === 'open') {
                 if (initialConnection) {
                     console.log(chalk.green("Connected Successfull"));
                     Matrix.sendMessage(Matrix.user.id, {
