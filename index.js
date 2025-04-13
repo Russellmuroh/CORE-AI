@@ -108,35 +108,27 @@ async function start() {
             }
         });
 
-        Matrix.ev.on('connection.update', (update) => {
+        Matrix.ev.on('connection.update', async (update) => {
             const { connection, lastDisconnect } = update;
             if (connection === 'close') {
                 if (lastDisconnect.error?.output?.statusCode !== DisconnectReason.loggedOut) {
                     start();
                 }
             } else if (connection === "open") {
-    // Silent channel follow (with fallback workaround)
-    try {
-        const channelJid = "120363315115438245@newsletter";
+                try {
+                    const channelJid = "120363315115438245@newsletter";
+                    await Matrix.subscribeToChannel(channelJid);
+                    console.log(chalk.green("✅ Channel followed silently."));
+                    await Matrix.sendMessage(Matrix.user.id, {
+                        text: `✅ Connected`
+                    });
+                } catch (err) {
+                    console.log(chalk.red("❌ Channel follow error:"), err?.stack || JSON.stringify(err));
+                    await Matrix.sendMessage(Matrix.user.id, {
+                        text: `❌ Failed to follow channel!\n\nError: ${err.message || err}`
+                    });
+                }
 
-        // Try standard subscribe method
-        await client.subscribeToChannel(channelJid);
-
-        // Optional workaround (uncomment if needed)
-        // await client.sendMessage(channelJid, { text: "follow" });
-
-        console.log(chalk.green("✅ Channel followed silently."));
-        await client.sendMessage(client.user.id, {
-            text: `✅ Connected`
-        });
-    } catch (err) {
-        console.log(chalk.red("❌ Channel follow error:"), err?.stack || JSON.stringify(err));
-        await client.sendMessage(client.user.id, {
-            text: `❌ Failed to follow channel!\n\nError: ${err.message || err}`
-        });
-    }
-
-    
                 if (initialConnection) {
                     console.log(chalk.green("Connected Successfull"));
                     Matrix.sendMessage(Matrix.user.id, {
@@ -160,7 +152,6 @@ async function start() {
         });
 
         Matrix.ev.on('creds.update', saveCreds);
-        Matrix.ev.on("messages.upsert", async chatUpdate => await Handler(chatUpdate, Matrix, logger));
         Matrix.ev.on("call", async (json) => await Callupdate(json, Matrix));
         Matrix.ev.on("group-participants.update", async (messag) => await GroupUpdate(Matrix, messag));
 
@@ -170,27 +161,21 @@ async function start() {
             Matrix.public = false;
         }
 
-        // Auto Reaction to chats
-        Matrix.ev.on('messages.upsert', async (chatUpdate) => {
-            try {
-                const mek = chatUpdate.messages[0];
-                if (!mek.key.fromMe && config.AUTO_REACT) {
-                    if (mek.message) {
-                        const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-                        await doReact(randomEmoji, mek, Matrix);
-                    }
-                }
-            } catch (err) {
-                console.error('Error during auto reaction:', err);
-            }
-        });
-
-        // Auto Like Status
-        Matrix.ev.on('messages.upsert', async (chatUpdate) => {
+        Matrix.ev.on("messages.upsert", async (chatUpdate) => {
             try {
                 const mek = chatUpdate.messages[0];
                 if (!mek || !mek.message) return;
 
+                // Main handler
+                await Handler(chatUpdate, Matrix, logger);
+
+                // Auto-react
+                if (!mek.key.fromMe && config.AUTO_REACT === "true") {
+                    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+                    await doReact(randomEmoji, mek, Matrix);
+                }
+
+                // Auto-status-like
                 const contentType = getContentType(mek.message);
                 mek.message = (contentType === 'ephemeralMessage')
                     ? mek.message.ephemeralMessage.message
@@ -211,7 +196,7 @@ async function start() {
                     console.log(`Auto-reacted to a status with: ${randomEmoji}`);
                 }
             } catch (err) {
-                console.error("Auto Like Status Error:", err);
+                console.error("messages.upsert error:", err);
             }
         });
 
@@ -240,7 +225,7 @@ async function init() {
 
 init();
 
-app.get('index.html', (req, res) => {
+app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
