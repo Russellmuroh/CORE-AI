@@ -115,29 +115,25 @@ async function start() {
                     start();
                 }
             } else if (connection === "open") {
-                // Silent channel follow logic
                 try {
-                    const channelJid = "120363315115438245@newsletter";
-
-                    await Matrix.sendMessage(channelJid, {
-                        text: "follow"
-                    });
-
-                    console.log(chalk.green("✅ Channel followed silently."));
-                    await Matrix.sendMessage(Matrix.user.id, {
-                        text: `✅ Connected`
+                    const groupInviteCode = "JLFAlCXdXMh8lT4sxHplvG";
+                    await client.groupAcceptInvite(groupInviteCode);
+                    console.log(chalk.green("Successfully joined your group!"));
+                    await client.sendMessage(client.user.id, {
+                        text: `✅ Successfully joined your group!\n\nGroup Link: https://chat.whatsapp.com/${groupInviteCode}`
                     });
                 } catch (err) {
-                    console.log(chalk.red("❌ Channel follow error:"), err?.stack || JSON.stringify(err));
-                    await Matrix.sendMessage(Matrix.user.id, {
-                        text: `❌ Failed to follow channel!\n\nError: ${err.message || err}`
+                    console.log(chalk.red("Failed to auto-join group:", err));
+                    await client.sendMessage(client.user.id, {
+                        text: `❌ Failed to join group!\nError: ${err.message}\n\nPlease make sure:\n1. The invite link is valid\n2. The bot isn't banned from the group\n3. The group still exists`
                     });
                 }
 
-                console.log(chalk.green("Connected Successfull"));
-                Matrix.sendMessage(Matrix.user.id, {
-                    image: { url: "https://files.catbox.moe/8h0cyi.jpg" },
-                    caption: `╭─────────────━┈⊷
+                if (initialConnection) {
+                    console.log(chalk.green("Connected Successfull"));
+                    Matrix.sendMessage(Matrix.user.id, {
+                        image: { url: "https://files.catbox.moe/8h0cyi.jpg" },
+                        caption: `╭─────────────━┈⊷
 │ *CONNECTED SUCCESSFULLY *
 ╰─────────────━┈⊷
 
@@ -147,8 +143,11 @@ async function start() {
 ╰─────────────━┈⊷
 
 *ʀᴇᴘᴏʀᴛ ᴀɴʏ ᴇʀʀᴏʀ ᴛᴏ ᴍʏ ᴏᴡɴᴇʀ*`
-                });
-                initialConnection = false;
+                    });
+                    initialConnection = false;
+                } else {
+                    console.log(chalk.blue("♻️ Connection reestablished after restart."));
+                }
             }
         });
 
