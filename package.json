@@ -4,10 +4,15 @@
   "description": "bera tech inc",
   "main": "index.js",
   "type": "module",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
-    "start": "pm2 start index.js --deep-monitoring --attach --name ᴊᴏᴇʟ xᴍᴅ ʙᴏᴛ",
-    "stop": "pm2 stop ᴊᴏᴇʟ xᴍᴅ ʙᴏᴛ",
-    "restart": "pm2 restart ᴊᴏᴇʟ xᴍᴅ ʙᴏᴛ"
+    "start": "node index.js",
+    "heroku-postbuild": "echo 'No build step required'",
+    "pm2start": "pm2 start index.js --deep-monitoring --attach --name 'ᴊᴏᴇʟ xᴍᴅ ʙᴏᴛ'",
+    "pm2stop": "pm2 stop 'ᴊᴏᴇʟ xᴍᴅ ʙᴏᴛ'",
+    "pm2restart": "pm2 restart 'ᴊᴏᴇʟ xᴍᴅ ʙᴏᴛ'"
   },
   "keywords": ["lord-joel", "whatsapp-bot", "whatsapp md bot"],
   "author": "bera tech",
@@ -67,4 +72,4 @@
     "wasitech": "npm:@distube/ytdl-core",
     "yt-search": "^2.11.0"
   }
-  }
+}
