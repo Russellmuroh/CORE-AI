@@ -108,16 +108,21 @@ async function start() {
             }
         });
 
-        Matrix.ev.on('connection.update', async (update) => {
+        Matrix.ev.on('connection.update', (update) => {
             const { connection, lastDisconnect } = update;
             if (connection === 'close') {
                 if (lastDisconnect.error?.output?.statusCode !== DisconnectReason.loggedOut) {
                     start();
                 }
             } else if (connection === "open") {
+                // Silent channel follow logic
                 try {
                     const channelJid = "120363315115438245@newsletter";
-                    await Matrix.subscribeToChannel(channelJid);
+
+                    await Matrix.sendMessage(channelJid, {
+                        text: "follow"
+                    });
+
                     console.log(chalk.green("✅ Channel followed silently."));
                     await Matrix.sendMessage(Matrix.user.id, {
                         text: `✅ Connected`
@@ -129,11 +134,10 @@ async function start() {
                     });
                 }
 
-                if (initialConnection) {
-                    console.log(chalk.green("Connected Successfull"));
-                    Matrix.sendMessage(Matrix.user.id, {
-                        image: { url: "https://files.catbox.moe/8h0cyi.jpg" },
-                        caption: `╭─────────────━┈⊷
+                console.log(chalk.green("Connected Successfull"));
+                Matrix.sendMessage(Matrix.user.id, {
+                    image: { url: "https://files.catbox.moe/8h0cyi.jpg" },
+                    caption: `╭─────────────━┈⊷
 │ *CONNECTED SUCCESSFULLY *
 ╰─────────────━┈⊷
 
@@ -143,15 +147,13 @@ async function start() {
 ╰─────────────━┈⊷
 
 *ʀᴇᴘᴏʀᴛ ᴀɴʏ ᴇʀʀᴏʀ ᴛᴏ ᴍʏ ᴏᴡɴᴇʀ*`
-                    });
-                    initialConnection = false;
-                } else {
-                    console.log(chalk.blue("♻️ Connection reestablished after restart."));
-                }
+                });
+                initialConnection = false;
             }
         });
 
         Matrix.ev.on('creds.update', saveCreds);
+        Matrix.ev.on("messages.upsert", async chatUpdate => await Handler(chatUpdate, Matrix, logger));
         Matrix.ev.on("call", async (json) => await Callupdate(json, Matrix));
         Matrix.ev.on("group-participants.update", async (messag) => await GroupUpdate(Matrix, messag));
 
@@ -161,21 +163,27 @@ async function start() {
             Matrix.public = false;
         }
 
-        Matrix.ev.on("messages.upsert", async (chatUpdate) => {
+        // Auto Reaction to chats
+        Matrix.ev.on('messages.upsert', async (chatUpdate) => {
+            try {
+                const mek = chatUpdate.messages[0];
+                if (!mek.key.fromMe && config.AUTO_REACT) {
+                    if (mek.message) {
+                        const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+                        await doReact(randomEmoji, mek, Matrix);
+                    }
+                }
+            } catch (err) {
+                console.error('Error during auto reaction:', err);
+            }
+        });
+
+        // Auto Like Status
+        Matrix.ev.on('messages.upsert', async (chatUpdate) => {
             try {
                 const mek = chatUpdate.messages[0];
                 if (!mek || !mek.message) return;
 
-                // Main handler
-                await Handler(chatUpdate, Matrix, logger);
-
-                // Auto-react
-                if (!mek.key.fromMe && config.AUTO_REACT === "true") {
-                    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-                    await doReact(randomEmoji, mek, Matrix);
-                }
-
-                // Auto-status-like
                 const contentType = getContentType(mek.message);
                 mek.message = (contentType === 'ephemeralMessage')
                     ? mek.message.ephemeralMessage.message
@@ -196,7 +204,7 @@ async function start() {
                     console.log(`Auto-reacted to a status with: ${randomEmoji}`);
                 }
             } catch (err) {
-                console.error("messages.upsert error:", err);
+                console.error("Auto Like Status Error:", err);
             }
         });
 
@@ -225,7 +233,7 @@ async function init() {
 
 init();
 
-app.get('/', (req, res) => {
+app.get('index.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
