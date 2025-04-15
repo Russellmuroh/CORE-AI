@@ -14,13 +14,7 @@
         "required": true
         
       },
-      "PREFIX": {
-        "description": "Bot command prefix, (e.g, . , ! @ etc",
-        "value":".",
-        "required": true
-        
-      },
-    
+      
  
     "STICKER_NAME": {
       "description": "type your sticker pack name.",
