@@ -1,13 +1,27 @@
+/**
+ * =====================================================
+ *         CLOUD AI | ANTI-DELETE SYSTEM BY MATRIX
+ * =====================================================
+ *  - Restores deleted messages (Text, Media, Voice)
+ *  - Works in both Groups and Private chats
+ *  - Toggle using: 'antidelete on' / 'antidelete off'
+ *  - No authentication required (global toggle)
+ *  - Smart auto-handling with timestamp formatting
+ * =====================================================
+ */
+
 import fs from 'fs';
 import pkg from '@whiskeysockets/baileys';
 const { proto, downloadContentFromMessage } = pkg;
-import config from '../../config.cjs';
 
+// ==========================
+//   CLASS: AntiDelete Core
+// ==========================
 class AntiDeleteSystem {
   constructor() {
     this.enabled = false;
     this.messageCache = new Map();
-    this.cacheExpiry = 5 * 60 * 1000;
+    this.cacheExpiry = 5 * 60 * 1000; // 5 minutes
     this.cleanupInterval = setInterval(() => this.cleanExpiredMessages(), this.cacheExpiry);
   }
 
@@ -39,6 +53,9 @@ class AntiDeleteSystem {
   }
 }
 
+// ==========================
+//     SETUP & CONFIG FILE
+// ==========================
 const antiDelete = new AntiDeleteSystem();
 const statusPath = './antidelete_status.json';
 
@@ -48,16 +65,11 @@ if (fs.existsSync(statusPath)) {
 }
 if (!statusData.chats) statusData.chats = {};
 
+// ==========================
+//   MAIN HANDLER FUNCTION
+// ==========================
 const AntiDelete = async (m, Matrix) => {
-  const botNum = Matrix.user.id?.split('@')[0];
-  const senderNum = m.sender?.split('@')[0];
-  const ownerNum = config.OWNER_NUMBER;
-
-  const isBotUser = senderNum === botNum;
-  const isOwner = senderNum === ownerNum;
-
   const chatId = m.from;
-
   const formatJid = (jid) => jid ? jid.replace(/@s\.whatsapp\.net|@g\.us/g, '') : 'Unknown';
 
   const getChatInfo = async (jid) => {
@@ -76,16 +88,14 @@ const AntiDelete = async (m, Matrix) => {
     return { name: 'Private Chat', isGroup: false };
   };
 
+  // ==========================
+  //    TOGGLE ANTIDELETE
+  // ==========================
   if (m.body.toLowerCase() === 'antidelete on' || m.body.toLowerCase() === 'antidelete off') {
-    if (!isBotUser && !isOwner) {
-      await m.reply('🚫 *You are not authorized to use this command!*');
-      return;
-    }
-
-    const mode = config.DELETE_PATH === "same" ? "Same Chat" : "Owner PM";
+    const mode = 'Same Chat';
     const responses = {
-      on: `🛡️ *ANTI-DELETE ENABLED* 🛡️\n\n🔹 Protection: *ACTIVE*\n🔹 Scope: *All Chats*\n🔹 Cache: *5 minutes*\n🔹 Mode: *${mode}*\n\n✅ Deleted messages will be recovered!`,
-      off: `⚠️ *ANTI-DELETE DISABLED* ⚠️\n\n🔸 Protection: *OFF*\n🔸 Cache cleared\n🔸 Deleted messages will not be recovered.`
+      on: `🛡️ *ANTI-DELETE ENABLED* - Cloud AI\n\nScope: All Chats\nMode: ${mode}\n\n✅ Deleted messages will now be restored here!`,
+      off: `⚠️ *ANTI-DELETE DISABLED* - Cloud AI\n\nDeleted messages will no longer be recovered.`
     };
 
     if (m.body.toLowerCase() === 'antidelete on') {
@@ -105,7 +115,9 @@ const AntiDelete = async (m, Matrix) => {
     return;
   }
 
-  // Cache messages
+  // ==========================
+  //    CACHE INCOMING MSGS
+  // ==========================
   Matrix.ev.on('messages.upsert', async ({ messages }) => {
     if (!antiDelete.enabled || !messages?.length) return;
 
@@ -120,24 +132,20 @@ const AntiDelete = async (m, Matrix) => {
           msg.message.documentMessage?.caption;
 
         let media, type, mimetype;
-
         const mediaTypes = ['image', 'video', 'audio', 'sticker', 'document'];
+
         for (const mediaType of mediaTypes) {
           if (msg.message[`${mediaType}Message`]) {
             const mediaMsg = msg.message[`${mediaType}Message`];
             try {
               const stream = await downloadContentFromMessage(mediaMsg, mediaType);
               let buffer = Buffer.from([]);
-              for await (const chunk of stream) {
-                buffer = Buffer.concat([buffer, chunk]);
-              }
+              for await (const chunk of stream) buffer = Buffer.concat([buffer, chunk]);
               media = buffer;
               type = mediaType;
               mimetype = mediaMsg.mimetype;
               break;
-            } catch (e) {
-              console.error(`Error downloading ${mediaType} media:`, e);
-            }
+            } catch {}
           }
         }
 
@@ -145,15 +153,11 @@ const AntiDelete = async (m, Matrix) => {
           try {
             const stream = await downloadContentFromMessage(msg.message.audioMessage, 'audio');
             let buffer = Buffer.from([]);
-            for await (const chunk of stream) {
-              buffer = Buffer.concat([buffer, chunk]);
-            }
+            for await (const chunk of stream) buffer = Buffer.concat([buffer, chunk]);
             media = buffer;
             type = 'voice';
             mimetype = msg.message.audioMessage.mimetype;
-          } catch (e) {
-            console.error('Error downloading voice message:', e);
-          }
+          } catch {}
         }
 
         if (content || media) {
@@ -168,12 +172,13 @@ const AntiDelete = async (m, Matrix) => {
             chatJid: msg.key.remoteJid
           });
         }
-      } catch (error) {
-        console.error('Error caching message:', error);
-      }
+      } catch {}
     }
   });
 
+  // ==========================
+  //     RESTORE DELETED
+  // ==========================
   Matrix.ev.on('messages.update', async (updates) => {
     if (!antiDelete.enabled || !updates?.length) return;
 
@@ -189,7 +194,6 @@ const AntiDelete = async (m, Matrix) => {
         antiDelete.messageCache.delete(key.id);
 
         const chatInfo = await getChatInfo(cachedMsg.chatJid);
-
         const deletedBy = updateData?.participant ?
           `@${formatJid(updateData.participant)}` :
           (key.participant ? `@${formatJid(key.participant)}` : 'Unknown');
@@ -198,7 +202,7 @@ const AntiDelete = async (m, Matrix) => {
           cachedMsg.type.charAt(0).toUpperCase() + cachedMsg.type.slice(1) :
           'Text';
 
-        const baseInfo = `🚨 *Deleted ${messageType} Recovered!*\n\n` +
+        const baseInfo = `🚨 *Cloud AI: Recovered Deleted ${messageType}*\n\n` +
           `📌 *Sender:* ${cachedMsg.senderFormatted}\n` +
           `✂️ *Deleted By:* ${deletedBy}\n` +
           `📍 *Chat:* ${chatInfo.name}${chatInfo.isGroup ? ' (Group)' : ''}\n` +
@@ -218,9 +222,7 @@ const AntiDelete = async (m, Matrix) => {
             text: `${baseInfo}\n\n💬 *Content:* \n${cachedMsg.content}`
           });
         }
-      } catch (error) {
-        console.error('Error handling deleted message:', error);
-      }
+      } catch {}
     }
   });
 };
