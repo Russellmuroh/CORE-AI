@@ -7,7 +7,7 @@ class AntiDeleteSystem {
   constructor() {
     this.enabled = false;
     this.messageCache = new Map();
-    this.cacheExpiry = 5 * 60 * 1000; // 5 minutes
+    this.cacheExpiry = 5 * 60 * 1000;
     this.cleanupInterval = setInterval(() => this.cleanExpiredMessages(), this.cacheExpiry);
   }
 
@@ -49,12 +49,14 @@ if (fs.existsSync(statusPath)) {
 if (!statusData.chats) statusData.chats = {};
 
 const AntiDelete = async (m, Matrix) => {
-  const ownerJid = config.OWNER_NUMBER + '@s.whatsapp.net';
-  const botJid = Matrix.user.id;
-  const chatId = m.from;
+  const botNum = Matrix.user.id?.split('@')[0];
+  const senderNum = m.sender?.split('@')[0];
+  const ownerNum = config.OWNER_NUMBER;
 
-  const isBotUser = m.sender?.replace(/[^0-9]/g, '') === botJid?.replace(/[^0-9]/g, '');
-  const isOwner = m.sender?.replace(/[^0-9]/g, '') === ownerJid?.replace(/[^0-9]/g, '');
+  const isBotUser = senderNum === botNum;
+  const isOwner = senderNum === ownerNum;
+
+  const chatId = m.from;
 
   const formatJid = (jid) => jid ? jid.replace(/@s\.whatsapp\.net|@g\.us/g, '') : 'Unknown';
 
@@ -74,7 +76,6 @@ const AntiDelete = async (m, Matrix) => {
     return { name: 'Private Chat', isGroup: false };
   };
 
-  // Toggle AntiDelete on/off
   if (m.body.toLowerCase() === 'antidelete on' || m.body.toLowerCase() === 'antidelete off') {
     if (!isBotUser && !isOwner) {
       await m.reply('🚫 *You are not authorized to use this command!*');
@@ -140,7 +141,6 @@ const AntiDelete = async (m, Matrix) => {
           }
         }
 
-        // Voice note check
         if (msg.message.audioMessage?.ptt) {
           try {
             const stream = await downloadContentFromMessage(msg.message.audioMessage, 'audio');
@@ -174,7 +174,6 @@ const AntiDelete = async (m, Matrix) => {
     }
   });
 
-  // Restore deleted message
   Matrix.ev.on('messages.update', async (updates) => {
     if (!antiDelete.enabled || !updates?.length) return;
 
@@ -206,18 +205,13 @@ const AntiDelete = async (m, Matrix) => {
           `🕒 *Sent At:* ${antiDelete.formatTime(cachedMsg.timestamp)}\n` +
           `⏱️ *Deleted At:* ${antiDelete.formatTime(Date.now())}`;
 
-        // Send message back to the same chat (group or private)
         if (cachedMsg.media) {
           const messageOptions = {
             [cachedMsg.type]: cachedMsg.media,
             mimetype: cachedMsg.mimetype,
             caption: baseInfo
           };
-
-          if (cachedMsg.type === 'voice') {
-            messageOptions.ptt = true;
-          }
-
+          if (cachedMsg.type === 'voice') messageOptions.ptt = true;
           await Matrix.sendMessage(cachedMsg.chatJid, messageOptions);
         } else if (cachedMsg.content) {
           await Matrix.sendMessage(cachedMsg.chatJid, {
