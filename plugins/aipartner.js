@@ -1,133 +1,71 @@
-// aiPartner.js
+import { promises as fs } from 'fs'; import path from 'path'; import fetch from 'node-fetch';
 
-import axios from 'axios';
-import fs from 'fs'; // You can remove this if no longer needed
-import config from '../config.cjs';
+const __filename = new URL(import.meta.url).pathname; const __dirname = path.dirname(__filename);
 
-const deepseekUrl = 'https://api.siputzx.my.id/api/ai/deepseek-llm-67b-chat?content=';
-const voiceIdFemale = 'JBFqnCBsd6RMkjVDRZzb';
-const voiceIdMale = 'TxGEqnHWrfWFTfGW9XjX';
-const elevenKey = 'sk_f5e46959e592f2f421fcfd3de377da4c0019e60dc2b46672';
+const featureFile = path.resolve(__dirname, '../feature_status.json'); const profileFile = path.resolve(__dirname, '../chat_profile.json'); const memoryFile = path.resolve(__dirname, '../chat_memory.json');
 
-const genderFile = './chat_profile.json';
-const memoryFile = './chat_memory.json';
-const toggleFile = './feature_status.json';
+async function readJSON(file, fallback = {}) { try { const data = await fs.readFile(file, 'utf-8'); return JSON.parse(data); } catch { return fallback; } }
 
-const loadJSON = (file) => {
-  if (!fs.existsSync(file)) return {};
-  return JSON.parse(fs.readFileSync(file));
-};
+async function writeJSON(file, data) { await fs.writeFile(file, JSON.stringify(data, null, 2)); }
 
-const saveJSON = (file, data) => {
-  fs.writeFileSync(file, JSON.stringify(data, null, 2));
-};
+function splitText(text, maxLength = 200) { const parts = []; let current = ''; for (const word of text.split(' ')) { if ((current + word).length > maxLength) { parts.push(current.trim()); current = ''; } current += word + ' '; } if (current.trim()) parts.push(current.trim()); return parts; }
 
-const getMemory = (sender) => {
-  const memory = loadJSON(memoryFile);
-  return memory[sender] || [];
-};
+const aipartner = async (m, conn) => { const text = m.body.trim().toLowerCase(); const sender = m.sender;
 
-const addToMemory = (sender, role, content) => {
-  const memory = loadJSON(memoryFile);
-  if (!memory[sender]) memory[sender] = [];
-  memory[sender].push({ role, content });
-  if (memory[sender].length > 15) memory[sender] = memory[sender].slice(-15);
-  saveJSON(memoryFile, memory);
-};
+const profile = await readJSON(profileFile); const memory = await readJSON(memoryFile); const feature = await readJSON(featureFile);
 
-const getVoiceId = (userGender) => {
-  return userGender === 'female' ? voiceIdMale : voiceIdFemale;
-};
+if (['gf on', 'gf off', 'bf on', 'bf off'].includes(text)) { if (m.sender.split(':')[0] !== conn.user.id.split(':')[0]) return;
 
-export const aiPartner = async (msg, sock, botNumber) => {
-  const text = msg.body?.trim();
-  const sender = msg.key.remoteJid;
-  const senderNumber = msg.key.participant || sender;
-  const isBotUser = senderNumber.includes(botNumber);
+const mode = text.split(' ')[0];
+const on = text.endsWith('on');
+feature[mode] = on;
+await writeJSON(featureFile, feature);
 
-  if (!text) return;
+await conn.sendMessage(m.from, { text: `✅ ${mode.toUpperCase()} mode has been ${on ? 'enabled' : 'disabled'}.` }, { quoted: m });
+return;
 
-  // Handle toggle
-  if (text.toLowerCase() === 'gf mode on' || text.toLowerCase() === 'bf mode on') {
-    const toggle = loadJSON(toggleFile);
-    toggle['aipartner'] = true;
-    saveJSON(toggleFile, toggle);
-    return sock.sendMessage(sender, { text: 'AI Partner mode activated.' });
-  }
-  if (text.toLowerCase() === 'gf mode off' || text.toLowerCase() === 'bf mode off') {
-    const toggle = loadJSON(toggleFile);
-    toggle['aipartner'] = false;
-    saveJSON(toggleFile, toggle);
-    return sock.sendMessage(sender, { text: 'AI Partner mode deactivated.' });
-  }
+}
 
-  const status = loadJSON(toggleFile);
-  if (!status['aipartner']) return;
+const mode = feature['gf'] ? 'gf' : feature['bf'] ? 'bf' : null; if (!mode) return;
 
-  if (!['gf', 'bf', 'partner'].some(t => text.toLowerCase().startsWith(t))) return;
+if (!profile[sender]) { await conn.sendMessage(m.from, { text: 'Hi! Before we begin, are you male or female?' }, { quoted: m }); profile[sender] = { gender: null }; await writeJSON(profileFile, profile); return; }
 
-  const genderData = loadJSON(genderFile);
-  if (!genderData[sender]) {
-    await sock.sendMessage(sender, { text: 'Hi! Are you male or female?' });
-    genderData[sender] = { asking: true };
-    saveJSON(genderFile, genderData);
-    return;
-  }
+if (!profile[sender].gender) { if (!['male', 'female'].includes(text)) { await conn.sendMessage(m.from, { text: 'Please reply with "male" or "female" to continue.' }, { quoted: m }); return; } profile[sender].gender = text; await writeJSON(profileFile, profile); await conn.sendMessage(m.from, { text: Thanks! Let's start chatting. }, { quoted: m }); return; }
 
-  if (genderData[sender].asking) {
-    const gender = text.toLowerCase().includes('male') ? 'male' : text.toLowerCase().includes('female') ? 'female' : null;
-    if (!gender) {
-      await sock.sendMessage(sender, { text: 'Please reply with "male" or "female".' });
-      return;
-    }
-    genderData[sender] = { gender };
-    saveJSON(genderFile, genderData);
-    await sock.sendMessage(sender, { text: 'Thanks! You can now talk to your AI partner.' });
-    return;
-  }
+if (!memory[sender]) memory[sender] = [];
 
-  const userGender = genderData[sender]?.gender || 'male';
-  const aiGender = userGender === 'female' ? 'boyfriend' : 'girlfriend';
-  const name = msg.pushName || 'Love';
-  const userMessage = text.split(/gf|bf|partner/i)[1]?.trim();
-  if (!userMessage) return;
+try { await m.React('❤️'); memory[sender].push({ role: 'user', content: text }); const context = memory[sender].slice(-10);
 
-  const memory = getMemory(sender);
-  const historyText = memory.map(m => `${m.role === 'user' ? name : aiGender.toUpperCase()}: ${m.content}`).join('\n');
-  const prompt = `You're an emotionally responsive ${aiGender} AI partner chatting with ${name}. Continue the conversation naturally.\n\n${historyText}\n${name}: ${userMessage}\n${aiGender.toUpperCase()}:`;
+const res = await fetch('https://api.siputzx.my.id/api/ai/gpt', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ messages: context })
+});
+const data = await res.json();
+const reply = data.result || 'I’m here for you.';
 
-  const gptRes = await axios.get(deepseekUrl + encodeURIComponent(prompt));
-  const reply = gptRes.data?.result?.trim() || "I'm here for you.";
+memory[sender].push({ role: 'assistant', content: reply });
+await writeJSON(memoryFile, memory);
 
-  addToMemory(sender, 'user', userMessage);
-  addToMemory(sender, 'ai', reply);
+await conn.sendMessage(m.from, { text: reply }, { quoted: m });
 
-  const voiceId = getVoiceId(userGender);
-  const voiceRes = await axios.post(
-    'https://api.elevenlabs.io/v1/text-to-speech/generate', 
-    {
-      text: reply,
-      voice_id: voiceId
-    },
-    {
-      headers: {
-        'Authorization': `Bearer ${elevenKey}`,
-        'Content-Type': 'application/json'
-      },
-      responseType: 'arraybuffer'
-    }
-  );
+const parts = splitText(reply);
+const voice = profile[sender].gender === 'male' ? 'Bella' : 'Josh';
 
-  // Send the GPT response as text
-  await sock.sendMessage(sender, { text: reply });
+for (let i = 0; i < parts.length; i++) {
+  const voiceRes = await fetch(`https://api.fakeyou.com/tts?text=${encodeURIComponent(parts[i])}&voice=${voice}`);
+  const voiceBuffer = await voiceRes.buffer();
+  await conn.sendMessage(m.from, {
+    audio: voiceBuffer,
+    mimetype: 'audio/mp4',
+    ptt: true
+  }, { quoted: m });
+}
 
-  // Send the TTS audio directly without saving it to the server
-  const audioBuffer = voiceRes.data;
-  if (audioBuffer) {
-    await sock.sendMessage(sender, {
-      audio: audioBuffer,
-      mimetype: 'audio/mp4',
-      ptt: true
-    });
-  }
-};
+await m.React('✅');
+
+} catch (err) { console.error('AI Partner Error:', err); await conn.sendMessage(m.from, { text: 'Something went wrong. Try again later.' }, { quoted: m }); await m.React('❌'); } };
+
+export default aipartner;
+
+  
