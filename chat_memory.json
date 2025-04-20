@@ -1,0 +1,22 @@
+{
+  "1234567890@c.us": [
+    {
+      "role": "user",
+      "content": "Hi there!"
+    },
+    {
+      "role": "ai",
+      "content": "Hello! How can I assist you today?"
+    }
+  ],
+  "0987654321@c.us": [
+    {
+      "role": "user",
+      "content": "Hey, what's up?"
+    },
+    {
+      "role": "ai",
+      "content": "Hey! I'm here for you."
+    }
+  ]
+}
