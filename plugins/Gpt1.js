@@ -8,8 +8,9 @@ const __dirname = path.dirname(__filename);
 const gptStatusFile = path.resolve(__dirname, "../gpt_status.json");
 const chatHistoryFile = path.resolve(__dirname, "../deepseek_history.json");
 
+const OPENAI_API_KEY = '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';
 const ELEVENLABS_API_KEY = 'sk_f5e46959e592f2f421fcfd3de377da4c0019e60dc2b46672';
-const ELEVENLABS_VOICE_ID = 'JBFqnCBsd6RMkjVDRZzb';
+const ELEVENLABS_VOICE_ID = '21m00Tcm4TlvDq8ikWAM'; // Rachel's voice
 
 async function isOwner(msg, conn) {
   const botNumber = conn.user.id.split(':')[0].replace(/\D/g, '');
@@ -70,16 +71,16 @@ async function deleteChatHistory(history, sender) {
 const deepseek = async (msg, conn) => {
   const gptStatus = await readGptStatus();
   const history = await readChatHistory();
-  const text = msg.body.trim().toLowerCase();
+  const text = msg.body.trim();
 
-  if (text === "who are you" || text === "what are you") {
+  if (text.toLowerCase() === "who are you" || text.toLowerCase() === "what are you") {
     await conn.sendMessage(msg.from, {
       text: "I'm CLOUD AI, developed by Bruce Bera and the Bera Tech team."
     }, { quoted: msg });
     return;
   }
 
-  if (text === "/forget") {
+  if (text.toLowerCase() === "/forget") {
     await deleteChatHistory(history, msg.sender);
     await conn.sendMessage(msg.from, {
       text: "🗑️ Conversation deleted successfully."
@@ -87,14 +88,14 @@ const deepseek = async (msg, conn) => {
     return;
   }
 
-  if (text === "deepseek on" || text === "deepseek off") {
+  if (text.toLowerCase() === "chatbot on" || text.toLowerCase() === "chatbot off") {
     if (!(await isOwner(msg, conn))) {
       await conn.sendMessage(msg.from, {
         text: "❌ Permission Denied! Only the bot owner can toggle GPT mode."
       }, { quoted: msg });
       return;
     }
-    const enable = text === "deepseek on";
+    const enable = text.toLowerCase() === "chatbot on";
     await writeGptStatus(enable);
     await conn.sendMessage(msg.from, {
       text: "✅ GPT Mode has been " + (enable ? "activated" : "deactivated") + '.'
@@ -104,7 +105,7 @@ const deepseek = async (msg, conn) => {
 
   if (!gptStatus.enabled) return;
 
-  if (text === "gpt") {
+  if (text.toLowerCase() === "gpt") {
     await conn.sendMessage(msg.from, {
       text: "Please provide a prompt."
     }, { quoted: msg });
@@ -114,12 +115,26 @@ const deepseek = async (msg, conn) => {
   try {
     await msg.React('💻');
 
-    const apiUrl = "https://api.siputzx.my.id/api/ai/deepseek-llm-67b-chat?content=" + encodeURIComponent(text);
-    const response = await fetch(apiUrl);
-    if (!response.ok) throw new Error("HTTP error! status: " + response.status);
+    const openAiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: "You are a helpful assistant." },
+          ...(history[msg.sender] || []),
+          { role: "user", content: text }
+        ]
+      })
+    });
 
-    const json = await response.json();
-    const reply = json.data;
+    if (!openAiResponse.ok) throw new Error("OpenAI API error: " + openAiResponse.status);
+
+    const openAiData = await openAiResponse.json();
+    const reply = openAiData.choices[0].message.content.trim();
 
     await updateChatHistory(history, msg.sender, { role: "user", content: text });
     await updateChatHistory(history, msg.sender, { role: "assistant", content: reply });
