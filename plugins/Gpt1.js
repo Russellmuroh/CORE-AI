@@ -7,7 +7,7 @@ const __dirname = path.dirname(__filename);
 
 const gptStatusFile = path.resolve(__dirname, "../gpt4o_status.json");
 const ELEVENLABS_API_KEY = 'sk_a457a68d0ab5db3211eee46e79279b1a766ef63ac6c64a95';
-const ELEVENLABS_VOICE_ID = 'JBFqnCBsd6RMkjVDRZzb';
+const ELEVENLABS_VOICE_ID = '21m00Tcm4TlvDq8ikWAM';
 
 const apiUrls = [
   "https://api.siputzx.my.id/api/ai/deepseek-llm-67b-chat?content=",
