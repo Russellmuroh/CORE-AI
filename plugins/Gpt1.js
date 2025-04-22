@@ -1,61 +1,100 @@
-import dotenv from 'dotenv';  // Load environment variables
 import { promises as fs } from 'fs';
 import path from 'path';
 import fetch from 'node-fetch';
 
-dotenv.config();  // Initialize dotenv to read the .env file
-
 const __filename = new URL(import.meta.url).pathname;
 const __dirname = path.dirname(__filename);
 
-const gptStatusFile = path.resolve(__dirname, "../gpt_status.json");
+const openaiStatusFile = path.resolve(__dirname, "../openai_status.json");
+const luminaiStatusFile = path.resolve(__dirname, "../luminai_status.json");
+const geminiStatusFile = path.resolve(__dirname, "../gemini_status.json");
+const gpt4oStatusFile = path.resolve(__dirname, "../gpt4o_status.json");
 const chatHistoryFile = path.resolve(__dirname, "../deepseek_history.json");
 
-const OPENAI_API_KEY = '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';
-const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;  // Load ElevenLabs API key from .env file
-const ELEVENLABS_VOICE_ID = '21m00Tcm4TlvDq8ikWAM'; // Rachel's voice
+const ELEVENLABS_API_KEY = 'sk_f5e46959e592f2f421fcfd3de377da4c0019e60dc2b46672';
+const ELEVENLABS_VOICE_ID = 'JBFqnCBsd6RMkjVDRZzb';
 
-// Function to read the status from gpt_status.json
-async function readGptStatus() {
+async function isOwner(msg, conn) {
+  const botNumber = conn.user.id.split(':')[0].replace(/\D/g, '');
+  const senderNumber = msg.sender.split(':')[0].replace(/\D/g, '');
+  return senderNumber === botNumber;
+}
+
+async function readStatus(filePath) {
   try {
-    const content = await fs.readFile(gptStatusFile, 'utf-8');
+    const content = await fs.readFile(filePath, 'utf-8');
     return JSON.parse(content);
   } catch {
-    return { gpt: false, gemini: false, gpt4o: false, luminai: false };  // Default status
+    return { enabled: false };
   }
 }
 
-// Function to write the status to gpt_status.json
-async function writeGptStatus(status) {
+async function writeStatus(filePath, status) {
   try {
-    await fs.writeFile(gptStatusFile, JSON.stringify(status, null, 2));
+    await fs.writeFile(filePath, JSON.stringify({ enabled: status }, null, 2));
   } catch (err) {
-    console.error('❌ Error writing GPT status:', err);
+    console.error('❌ Error writing status:', err);
   }
 }
 
-// Function to toggle the AI model status
-async function toggleModelStatus(model, status) {
-  const gptStatus = await readGptStatus();
-  gptStatus[model] = status;  // Update the status of the model
-  await writeGptStatus(gptStatus);  // Save the updated status
+async function readChatHistory() {
+  try {
+    const content = await fs.readFile(chatHistoryFile, 'utf-8');
+    return JSON.parse(content);
+  } catch {
+    return {};
+  }
 }
 
-// Handling the bot's response logic
-async function deepseek(msg, conn) {
-  const gptStatus = await readGptStatus();
-  const history = await readChatHistory();
-  const text = msg.body.trim();
+async function writeChatHistory(history) {
+  try {
+    await fs.writeFile(chatHistoryFile, JSON.stringify(history, null, 2));
+  } catch (err) {
+    console.error('Error writing chat history:', err);
+  }
+}
 
-  if (text.toLowerCase() === "who are you" || text.toLowerCase() === "what are you") {
+async function updateChatHistory(history, sender, entry) {
+  if (!history[sender]) {
+    history[sender] = [];
+  }
+  history[sender].push(entry);
+  if (history[sender].length > 20) {
+    history[sender].shift();
+  }
+  await writeChatHistory(history);
+}
+
+async function deleteChatHistory(history, sender) {
+  delete history[sender];
+  await writeChatHistory(history);
+}
+
+const deepseek = async (msg, conn) => {
+  const openaiStatus = await readStatus(openaiStatusFile);
+  const luminaiStatus = await readStatus(luminaiStatusFile);
+  const geminiStatus = await readStatus(geminiStatusFile);
+  const gpt4oStatus = await readStatus(gpt4oStatusFile);
+  const history = await readChatHistory();
+  const text = msg.body.trim().toLowerCase();
+
+  if (text === "who are you" || text === "what are you") {
     await conn.sendMessage(msg.from, {
       text: "I'm CLOUD AI, developed by Bruce Bera and the Bera Tech team."
     }, { quoted: msg });
     return;
   }
 
-  // Command to toggle AI models on or off
-  if (text.toLowerCase().startsWith("chatbot") || text.toLowerCase().startsWith("gpt") || text.toLowerCase().startsWith("gemini") || text.toLowerCase().startsWith("gpt4o") || text.toLowerCase().startsWith("luminai")) {
+  if (text === "/forget") {
+    await deleteChatHistory(history, msg.sender);
+    await conn.sendMessage(msg.from, {
+      text: "🗑️ Conversation deleted successfully."
+    }, { quoted: msg });
+    return;
+  }
+
+  // Handle AI model toggle commands
+  if (text === "gpt on" || text === "gpt off" || text === "gemini on" || text === "gemini off" || text === "gpt4o on" || text === "gpt4o off" || text === "luminai on" || text === "luminai off") {
     if (!(await isOwner(msg, conn))) {
       await conn.sendMessage(msg.from, {
         text: "❌ Permission Denied! Only the bot owner can toggle AI models."
@@ -63,51 +102,60 @@ async function deepseek(msg, conn) {
       return;
     }
 
-    const parts = text.split(" ");
-    const model = parts[0].toLowerCase();  // First part of the command (e.g., "gpt", "gemini")
-    const enable = parts[1]?.toLowerCase() === "on";  // Second part of the command (on/off)
+    const model = text.split(' ')[0];
+    const enable = text.split(' ')[1] === 'on';
+    let statusFile;
 
-    if (["gpt", "gemini", "gpt4o", "luminai"].includes(model)) {
-      await toggleModelStatus(model, enable);  // Toggle the model status
+    if (model === "gpt") {
+      statusFile = openaiStatusFile;
+    } else if (model === "gemini") {
+      statusFile = geminiStatusFile;
+    } else if (model === "gpt4o") {
+      statusFile = gpt4oStatusFile;
+    } else if (model === "luminai") {
+      statusFile = luminaiStatusFile;
+    }
+
+    if (statusFile) {
+      await writeStatus(statusFile, enable);
       await conn.sendMessage(msg.from, {
         text: `✅ ${model.charAt(0).toUpperCase() + model.slice(1)} has been ${enable ? "activated" : "deactivated"}.`
       }, { quoted: msg });
-      return;
-    } else {
-      await conn.sendMessage(msg.from, {
-        text: "❌ Invalid model. Please use 'gpt', 'gemini', 'gpt4o', or 'luminai'."
-      }, { quoted: msg });
-      return;
     }
+    return;
   }
 
-  if (!gptStatus.gpt) return;  // If GPT is disabled, do nothing
+  if (!(openaiStatus.enabled || luminaiStatus.enabled || geminiStatus.enabled || gpt4oStatus.enabled)) return;
 
-  // Continue with the rest of the logic, e.g., querying AI models
+  if (text === "gpt") {
+    await conn.sendMessage(msg.from, {
+      text: "Please provide a prompt."
+    }, { quoted: msg });
+    return;
+  }
+
   try {
     await msg.React('💻');
-    
-    if (gptStatus.gpt) {
-      const openAiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${OPENAI_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: "gpt-3.5-turbo",
-          messages: [
-            { role: "system", content: "You are a helpful assistant." },
-            ...(history[msg.sender] || []),
-            { role: "user", content: text }
-          ]
-        })
-      });
 
-      if (!openAiResponse.ok) throw new Error("OpenAI API error: " + openAiResponse.status);
+    let apiUrl = '';
+    let response = null;
 
-      const openAiData = await openAiResponse.json();
-      const reply = openAiData.choices[0].message.content.trim();
+    if (openaiStatus.enabled) {
+      apiUrl = "https://api.vapis.my.id/api/openai?q=" + encodeURIComponent(text);
+    } else if (geminiStatus.enabled) {
+      apiUrl = "https://vapis.my.id/api/gemini?q=" + encodeURIComponent(text);
+    } else if (gpt4oStatus.enabled) {
+      apiUrl = "https://vapis.my.id/api/gpt4o?q=" + encodeURIComponent(text);
+    } else if (luminaiStatus.enabled) {
+      apiUrl = "https://vapis.my.id/api/luminai?q=" + encodeURIComponent(text);
+    }
+
+    if (apiUrl) {
+      response = await fetch(apiUrl);
+      if (!response.ok) throw new Error("HTTP error! status: " + response.status);
+
+      const json = await response.json();
+      const reply = json.data;
 
       await updateChatHistory(history, msg.sender, { role: "user", content: text });
       await updateChatHistory(history, msg.sender, { role: "assistant", content: reply });
@@ -135,6 +183,7 @@ async function deepseek(msg, conn) {
       if (!audioRes.ok) throw new Error('Failed to fetch ElevenLabs TTS');
 
       const audioBuffer = await audioRes.buffer();
+
       const thumbnailRes = await fetch('https://files.catbox.moe/pimw8h.jpg');
       const thumbnailBuffer = await thumbnailRes.buffer();
 
@@ -163,6 +212,6 @@ async function deepseek(msg, conn) {
     }, { quoted: msg });
     await msg.React('❌');
   }
-}
+};
 
 export default deepseek;
