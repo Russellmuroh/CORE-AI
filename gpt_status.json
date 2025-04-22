@@ -1,3 +1,6 @@
 {
-  "enabled": false
+  "gpt": true,
+  "gemini": false,
+  "gpt4o": false,
+  "luminai": false
 }
