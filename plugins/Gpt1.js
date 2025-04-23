@@ -84,9 +84,22 @@ const deepseek = async (msg, conn) => {
     return;
   }
 
-  await conn.sendMessage(msg.from, { text: reply }, { quoted: msg });
+  // Send text reply with thumbnail
+  await conn.sendMessage(msg.from, {
+    text: reply,
+    contextInfo: {
+      externalAdReply: {
+        title: "BERA AI Response",
+        body: "Powered by Deepseek & ElevenLabs",
+        mediaType: 1,
+        renderLargerThumbnail: true,
+        thumbnailUrl: "https://files.catbox.moe/pimw8h.jpg",
+        sourceUrl: "https://github.com/DEVELOPER-BERA/BERA-TECH-BOT"
+      }
+    }
+  }, { quoted: msg });
 
-  // TTS ElevenLabs
+  // ElevenLabs TTS with thumbnail
   try {
     const audioRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}`, {
       method: 'POST',
@@ -108,12 +121,23 @@ const deepseek = async (msg, conn) => {
     if (audioRes.ok) {
       const audioBuffer = await audioRes.buffer();
       await conn.sendMessage(msg.from, {
-        audio: audioBuffer,
+        document: audioBuffer,
         mimetype: 'audio/mpeg',
-        ptt: true
+        fileName: 'BERA-Voice.mp3',
+        caption: '🎧 Voice reply by ElevenLabs',
+        contextInfo: {
+          externalAdReply: {
+            title: 'BERA Voice Response',
+            body: 'Generated with ElevenLabs AI',
+            thumbnailUrl: 'https://files.catbox.moe/pimw8h.jpg',
+            mediaType: 1,
+            renderLargerThumbnail: true,
+            sourceUrl: 'https://github.com/DEVELOPER-BERA/BERA-TECH-BOT'
+          }
+        }
       }, { quoted: msg });
     } else {
-      console.error("TTS failed.");
+      console.error("TTS failed:", await audioRes.text());
     }
 
     await msg.React('✅');
