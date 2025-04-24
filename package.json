@@ -6,6 +6,7 @@
   "version": "3.0.0",
   "description": "A WhatsApp Bot Created By bera",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "pm2 start index.js --deep-monitoring --attach --name CLOUD-AI",
     "stop": "pm2 stop CLOUD-AI",
