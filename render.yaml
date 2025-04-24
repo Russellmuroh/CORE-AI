@@ -1,11 +1,15 @@
 services:
   - type: web
-    name: cloud-ai
+    name: CLOUD-AI
     env: node
     plan: free
-    buildCommand: 'yarn install'
-    startCommand: 'yarn start'
-    envVars:
-      - key: NODE_ENV
-        value: production
+    repo: https://github.com/PRO-DEVELOPER-1/CORE-AI
+    branch: main
+    buildCommand: npm install
+    startCommand: npm start
     autoDeploy: true
+    envVars:
+      - key: SESSION_ID
+        sync: false  # Don't include the value here, will be entered manually on Render
+      - key: OWNER_NUMBER
+        sync: false
