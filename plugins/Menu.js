@@ -7,7 +7,7 @@ import config from '../config.cjs';
 import axios from 'axios';
 
 const getUserStats = async (user) => {
-  return { menuCount: 5 };
+  return { menuCount: 5 }; // Example stats, modify as per your system
 };
 
 const menu = async (m, Matrix) => {
@@ -24,7 +24,7 @@ const menu = async (m, Matrix) => {
   const userStats = await getUserStats(m.sender);
 
   const mainMenu = `
-✨ Welcome to CLOUD  ☁️ AI , ${m.pushName}! ✨
+✨ Welcome to ${config.BOT_NAME}, ${m.pushName}! ✨
 
 🖐️ ${greeting}, ${m.pushName}! 🎉 Bot is ready to assist you!
 
@@ -44,7 +44,7 @@ const menu = async (m, Matrix) => {
 🕵️‍♂️ 9. STALK MENU
 🎨 10. LOGO MENU
 
-✏️ Please reply with a number (1–10) to open the submenu of your choice. `;
+✏️ Please reply with a number (1–10) to open the submenu of your choice.`;
 
   const menuImageUrl = 'https://files.catbox.moe/7jt69h.jpg';
 
@@ -54,8 +54,18 @@ const menu = async (m, Matrix) => {
     contextInfo: { mentionedJid: [m.sender] }
   }, { quoted: m });
 
-  const menus = {
-    "1": `
+  // Listen for the reply message (this part is for waiting the user reply after the main menu)
+  Matrix.on('message', async (message) => {
+    // Ensure the reply is from the same user
+    if (message.sender !== m.sender) return;
+
+    // Capture the user reply (ensure it's a valid number between 1 and 10)
+    const reply = message.body.trim();
+
+    // Check if the reply is valid (between 1 and 10)
+    if (reply >= 1 && reply <= 10) {
+      const menus = {
+        "1": `
 🔽 DOWNLOAD MENU 🔽
 
 ╭──────────────╮
@@ -71,7 +81,7 @@ const menu = async (m, Matrix) => {
 • ytmp3
 • ytmp4
 `,
-    "2": `
+        "2": `
 🔽 CONVERTER MENU 🔽
 
 ╭──────────────╮
@@ -84,7 +94,7 @@ const menu = async (m, Matrix) => {
 • mp3
 • url
 `,
-    "3": `
+        "3": `
 🔽 AI MENU 🔽
 
 ╭──────────────╮
@@ -98,7 +108,7 @@ const menu = async (m, Matrix) => {
 • gemini
 • define
 `,
-    "4": `
+        "4": `
 🔽 TOOLS MENU 🔽
 
 ╭──────────────╮
@@ -113,7 +123,7 @@ const menu = async (m, Matrix) => {
 • shorten
 • save
 `,
-    "5": `
+        "5": `
 🔽 GROUP MENU 🔽
 
 ╭──────────────╮
@@ -135,7 +145,7 @@ const menu = async (m, Matrix) => {
 • poll
 • vcf
 `,
-    "6": `
+        "6": `
 🔽 SEARCH MENU 🔽
 
 ╭──────────────╮
@@ -152,7 +162,7 @@ const menu = async (m, Matrix) => {
 • bible
 • biblebooks
 `,
-    "7": `
+        "7": `
 🔽 MAIN MENU 🔽
 
 ╭──────────────╮
@@ -165,7 +175,7 @@ const menu = async (m, Matrix) => {
 • about
 • repo
 `,
-    "8": `
+        "8": `
 🔽 OWNER MENU 🔽
 
 ╭──────────────╮
@@ -189,7 +199,7 @@ const menu = async (m, Matrix) => {
 • del
 • antidelete on/off
 `,
-    "9": `
+        "9": `
 🔽 STALK MENU 🔽
 
 ╭──────────────╮
@@ -199,7 +209,7 @@ const menu = async (m, Matrix) => {
 • instastalk
 • githubstalk
 `,
-    "10": `
+        "10": `
 🔽 LOGO MENU 🔽
 
 ╭──────────────╮
@@ -250,14 +260,20 @@ const menu = async (m, Matrix) => {
 • gold
 • glow
 `,
-  };
+      };
 
-  if (menus[cmd]) {
-    Matrix.sendMessage(m.from, {
-      text: menus[cmd],
-      contextInfo: { mentionedJid: [m.sender] }
-    });
-  }
+      // Send the appropriate submenu message
+      await Matrix.sendMessage(m.from, {
+        text: menus[reply],
+        contextInfo: { mentionedJid: [m.sender] }
+      });
+    } else {
+      // If the reply is not valid
+      await Matrix.sendMessage(m.from, {
+        text: "❌ Invalid input! Please reply with a number (1–10) to choose a submenu."
+      });
+    }
+  });
 };
 
 export default menu;
