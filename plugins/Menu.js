@@ -7,24 +7,24 @@ import config from '../config.cjs';
 import axios from 'axios';
 
 const getUserStats = async (user) => {
-  return { menuCount: 5 }; // Example stats, modify as per your system
+    return { menuCount: 5 };
 };
 
 const menu = async (m, Matrix) => {
-  const cmd = m.body.toLowerCase().trim();
-  if (cmd !== 'menu') return;
+    const cmd = m.body.toLowerCase().trim();
+    if (cmd !== 'menu' && !/^[1-9]$|^10$/.test(cmd)) return;
 
-  const currentTime = moment().format('HH');
-  let greeting = "Good Day";
-  if (currentTime < 12) greeting = "Good Morning";
-  else if (currentTime < 18) greeting = "Good Afternoon";
-  else greeting = "Good Evening";
+    const currentTime = moment().format('HH');
+    let greeting = "Good Day";
+    if (currentTime < 12) greeting = "Good Morning";
+    else if (currentTime < 18) greeting = "Good Afternoon";
+    else greeting = "Good Evening";
 
-  const lastUpdated = moment().format('LLLL');
-  const userStats = await getUserStats(m.sender);
+    const lastUpdated = moment().format('LLLL');
+    const userStats = await getUserStats(m.sender);
 
-  const mainMenu = `
-✨ Welcome to ${config.BOT_NAME}, ${m.pushName}! ✨
+    const mainMenu = `
+✨ Welcome to CLOUD ☁️ AI, ${m.pushName}! ✨
 
 🖐️ ${greeting}, ${m.pushName}! 🎉 Bot is ready to assist you!
 
@@ -46,31 +46,20 @@ const menu = async (m, Matrix) => {
 
 ✏️ Please reply with a number (1–10) to open the submenu of your choice.`;
 
-  const menuImageUrl = 'https://files.catbox.moe/7jt69h.jpg';
+    const menuImageUrl = 'https://files.catbox.moe/7jt69h.jpg';
 
-  await Matrix.sendMessage(m.from, {
-    image: { url: menuImageUrl },
-    caption: mainMenu,
-    contextInfo: { mentionedJid: [m.sender] }
-  }, { quoted: m });
+    if (cmd === 'menu') {
+        await Matrix.sendMessage(m.from, {
+            image: { url: menuImageUrl },
+            caption: mainMenu,
+            contextInfo: { mentionedJid: [m.sender] }
+        }, { quoted: m });
+        return;
+    }
 
-  // Listen for the reply message (this part is for waiting the user reply after the main menu)
-  Matrix.on('message', async (message) => {
-    // Ensure the reply is from the same user
-    if (message.sender !== m.sender) return;
-
-    // Capture the user reply (ensure it's a valid number between 1 and 10)
-    const reply = message.body.trim();
-
-    // Check if the reply is valid (between 1 and 10)
-    if (reply >= 1 && reply <= 10) {
-      const menus = {
+    const menus = {
         "1": `
 🔽 DOWNLOAD MENU 🔽
-
-╭──────────────╮
-│  Available Commands:  │
-╰──────────────╯
 • apk
 • play
 • video
@@ -79,41 +68,29 @@ const menu = async (m, Matrix) => {
 • pinterestdl
 • insta
 • ytmp3
-• ytmp4
-`,
+• ytmp4`,
+
         "2": `
 🔽 CONVERTER MENU 🔽
-
-╭──────────────╮
-│  Available Commands:  │
-╰──────────────╯
 • attp
 • ebinary
 • dbinary
 • emojimix
 • mp3
-• url
-`,
+• url`,
+
         "3": `
 🔽 AI MENU 🔽
-
-╭──────────────╮
-│  Available Commands:  │
-╰──────────────╯
 • ai
 • sheng on/off
 • report
 • deepseek on/off
 • dalle
 • gemini
-• define
-`,
+• define`,
+
         "4": `
 🔽 TOOLS MENU 🔽
-
-╭──────────────╮
-│  Available Commands:  │
-╰──────────────╯
 • calculator
 • tempmail
 • checkmail
@@ -121,14 +98,10 @@ const menu = async (m, Matrix) => {
 • tts
 • emojimix
 • shorten
-• save
-`,
+• save`,
+
         "5": `
 🔽 GROUP MENU 🔽
-
-╭──────────────╮
-│  Available Commands:  │
-╰──────────────╯
 • groupinfo
 • hidetag
 • tagall
@@ -143,14 +116,10 @@ const menu = async (m, Matrix) => {
 • invite
 • promote
 • poll
-• vcf
-`,
+• vcf`,
+
         "6": `
 🔽 SEARCH MENU 🔽
-
-╭──────────────╮
-│  Available Commands:  │
-╰──────────────╯
 • play
 • yts
 • imdb
@@ -160,32 +129,25 @@ const menu = async (m, Matrix) => {
 • wikimedia
 • lyrics
 • bible
-• biblebooks
-`,
+• biblebooks`,
+
         "7": `
 🔽 MAIN MENU 🔽
-
-╭──────────────╮
-│  Available Commands:  │
-╰──────────────╯
 • ping
 • alive
 • owner
 • menu
 • about
-• repo
-`,
+• repo`,
+
         "8": `
 🔽 OWNER MENU 🔽
-
-╭──────────────╮
-│  Available Commands:  │
-╰──────────────╯
 • join
 • leave
 • block
 • unblock
 • setppbot
+• pp
 • anticall
 • alwaysonline
 • autoread
@@ -193,28 +155,18 @@ const menu = async (m, Matrix) => {
 • autorecording
 • autoreact
 • autobio
-• autoread
-• alwaysonline
 • view
 • del
-• antidelete on/off
-`,
+• antidelete on/off`,
+
         "9": `
 🔽 STALK MENU 🔽
-
-╭──────────────╮
-│  Available Commands:  │
-╰──────────────╯
 • truecaller
 • instastalk
-• githubstalk
-`,
+• githubstalk`,
+
         "10": `
 🔽 LOGO MENU 🔽
-
-╭──────────────╮
-│  Available Commands:  │
-╰──────────────╯
 • logo
 • hacker
 • blackpink
@@ -258,22 +210,15 @@ const menu = async (m, Matrix) => {
 • textlight
 • wall
 • gold
-• glow
-`,
-      };
+• glow`
+    };
 
-      // Send the appropriate submenu message
-      await Matrix.sendMessage(m.from, {
-        text: menus[reply],
-        contextInfo: { mentionedJid: [m.sender] }
-      });
-    } else {
-      // If the reply is not valid
-      await Matrix.sendMessage(m.from, {
-        text: "❌ Invalid input! Please reply with a number (1–10) to choose a submenu."
-      });
+    if (menus[cmd]) {
+        Matrix.sendMessage(m.from, {
+            text: menus[cmd],
+            contextInfo: { mentionedJid: [m.sender] }
+        });
     }
-  });
 };
 
 export default menu;
