@@ -5,11 +5,11 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "pm2 start index.js --deep-monitoring --attach --name ᴊᴏᴇʟ ᴍᴅ ʙᴏᴛ",
-    "stop": "pm2 stop ᴊᴏᴇʟ ᴍᴅ ʙᴏᴛ",
-    "restart": "pm2 restart ᴊᴏᴇʟ ᴍᴅ ʙᴏᴛ"
+    "start": "pm2 start index.js ",
+    "stop": "pm2 stop ",
+    "restart": "pm2 restart "
   },
-  "keywords": ["lord-joel", "whatsapp-bot", "whatsapp md bot"],
+  "keywords": ["bera-tech", "whatsapp-bot", "whatsapp md bot"],
   "author": "bera tech",
   "license": "ISC",
   "dependencies": {
