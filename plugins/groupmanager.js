@@ -1,150 +1,190 @@
-import { WAMessage, WASocket, WAMediaUpload, WAProto } from '@whiskeysockets/baileys';
-import { Boom } from '@hapi/boom';
+import { WAMessage, WASocket } from '@whiskeysockets/baileys';
 
-class GroupManager {
-  private groupSettings: Map<string, {
-    antiLink: boolean;
-    antiDelete: boolean;
-    welcomeMessage?: string;
-  }> = new Map();
+export default class GroupManager {
+    constructor() {
+        this.groupSettings = new Map(); // Stores { antiLink, antiDelete, welcomeMsg }
+        this.metadataCache = new Map(); // Caches group metadata
+        this.commands = [
+            'add', 'kick', 'promote', 'demote',
+            'open', 'close', 'setdesc', 'setname', 'antilink', 'antidelete',
+            'listadmins', 'listmembers', 'tagall', 'setwelcome'
+        ];
+    }
 
-  private cachedGroupMetadata: Map<string, WAProto.IGroupMetadata> = new Map();
+    async handleCommand(sock, m, { isAdmin, isBotAdmin }) {
+        if (!m.isGroup || !isAdmin) return;
 
-  constructor() {
-    setInterval(() => this.cachedGroupMetadata.clear(), 1000 * 60 * 30); // Clear cache every 30 mins
-  }
+        const messageText = m.body.toLowerCase().trim();  // Convert message to lowercase
 
-  // ==================== Core Functions ====================
-  async handleCommand(sock: WASocket, msg: WAMessage) {
-    if (!msg.key.remoteJid?.endsWith('@g.us')) return;
+        // Check if the message contains any command
+        const command = this.commands.find(cmd => messageText.includes(cmd));
 
-    try {
-      const groupJid = msg.key.remoteJid;
-      const [cmd, ...args] = msg.message?.conversation?.split(' ') || [];
-      const content = args.join(' ');
+        if (!command) return;  // If no command found, do nothing
 
-      // Refresh cache if empty
-      if (!this.cachedGroupMetadata.has(groupJid)) {
-        this.cachedGroupMetadata.set(groupJid, await sock.groupMetadata(groupJid));
-      }
+        const args = messageText.slice(command.length).trim().split(' ');  // Get arguments after the command
+        const content = args.join(' ').trim();  // Join remaining arguments
 
-      const metadata = this.cachedGroupMetadata.get(groupJid)!;
-      const isAdmin = metadata.participants.find(p => 
-        p.id === msg.key.participant && p.admin === 'admin'
-      );
+        try {
+            // Member Management
+            if (command === 'add') {
+                if (!isBotAdmin) throw new Error('Bot needs admin rights');
+                await this._addMember(sock, m.from, content);
+            }
+            else if (command === 'kick') {
+                await this._removeMember(sock, m.from, content);
+            }
+            else if (command === 'promote') {
+                await this._changeAdmin(sock, m.from, content, 'promote');
+            }
+            else if (command === 'demote') {
+                await this._changeAdmin(sock, m.from, content, 'demote');
+            }
 
-      if (!isAdmin) {
-        return sock.sendMessage(groupJid, { text: '❌ Admin privileges required' });
-      }
+            // Group Settings
+            else if (command === 'open') {
+                await this._setGroupLock(sock, m.from, false);
+            }
+            else if (command === 'close') {
+                await this._setGroupLock(sock, m.from, true);
+            }
+            else if (command === 'setdesc') {
+                await this._setDescription(sock, m.from, content);
+            }
+            else if (command === 'setname') {
+                await this._setGroupName(sock, m.from, content);
+            }
+            else if (command === 'antilink') {
+                await this._toggleSetting(sock, m.from, 'antiLink');
+            }
+            else if (command === 'antidelete') {
+                await this._toggleSetting(sock, m.from, 'antiDelete');
+            }
 
-      switch(cmd?.toLowerCase()) {
-        case 'add': return this.addMember(sock, groupJid, content);
-        case 'kick': return this.removeMember(sock, groupJid, content);
-        case 'promote': return this.changeAdmin(sock, groupJid, content, 'promote');
-        case 'demote': return this.changeAdmin(sock, groupJid, content, 'demote');
-        case 'open': return this.setGroupLock(sock, groupJid, false);
-        case 'close': return this.setGroupLock(sock, groupJid, true);
-        case 'setdesc': return this.setDescription(sock, groupJid, content);
-        case 'setname': return this.setGroupName(sock, groupJid, content);
-        case 'antilink': return this.toggleAntiLink(sock, groupJid);
-        case 'antidelete': return this.toggleAntiDelete(sock, groupJid);
-        case 'listadmins': return this.listAdmins(sock, groupJid);
-        case 'listmembers': return this.listMembers(sock, groupJid);
-        case 'tagall': return this.mentionAll(sock, groupJid);
-        case 'setwelcome': return this.setWelcomeMessage(sock, groupJid, content);
-        default: return sock.sendMessage(groupJid, { text: '❌ Invalid command' });
-      }
-    } catch (error) {
-      console.error('Command error:', error);
-      if (error instanceof Boom) {
-        await sock.sendMessage(msg.key.remoteJid!, { 
-          text: `❌ Error: ${error.output.payload.message}` 
+            // Utilities
+            else if (command === 'listadmins') {
+                await this._listAdmins(sock, m.from);
+            }
+            else if (command === 'listmembers') {
+                await this._listMembers(sock, m.from);
+            }
+            else if (command === 'tagall') {
+                await this._mentionAll(sock, m.from);
+            }
+            else if (command === 'setwelcome') {
+                await this._setWelcomeMessage(sock, m.from, content);
+            }
+            else {
+                throw new Error('Unknown command');
+            }
+
+        } catch (error) {
+            await sock.sendMessage(m.from, { text: `❌ Error: ${error.message}` });
+        }
+    }
+
+    async handleMessages(sock, m) {
+        if (!m.isGroup) return;
+        const settings = this.groupSettings.get(m.from) || {};
+
+        // Anti-link protection
+        if (settings.antiLink && /https?:\/\/[^\s]+/.test(m.body)) {
+            await sock.sendMessage(m.from, { delete: m.key });
+            await sock.sendMessage(m.from, {
+                text: `⚠️ @${m.sender.split('@')[0]} Links are not allowed!`,
+                mentions: [m.sender]
+            });
+        }
+
+        // Welcome new members
+        if (m.message?.protocolMessage?.type === 2 && settings.welcomeMsg) {
+            const newMembers = m.message.protocolMessage.groupParticipantAdd?.participants || [];
+            await sock.sendMessage(m.from, {
+                text: `👋 ${newMembers.map(m => `@${m.split('@')[0]}`).join(' ')}\n${settings.welcomeMsg}`,
+                mentions: newMembers
+            });
+        }
+    }
+
+    // ============= PRIVATE METHODS =============
+    async _addMember(sock, groupJid, phone) {
+        const userJid = `${phone.replace(/\D/g, '')}@s.whatsapp.net`;
+        await sock.groupParticipantsUpdate(groupJid, [userJid], 'add');
+        await sock.sendMessage(groupJid, { text: `✅ Added ${phone}` });
+    }
+
+    async _removeMember(sock, groupJid, phone) {
+        const userJid = `${phone.replace(/\D/g, '')}@s.whatsapp.net`;
+        await sock.groupParticipantsUpdate(groupJid, [userJid], 'remove');
+        await sock.sendMessage(groupJid, { text: `🚪 Kicked ${phone}` });
+    }
+
+    async _changeAdmin(sock, groupJid, phone, action) {
+        const userJid = `${phone.replace(/\D/g, '')}@s.whatsapp.net`;
+        await sock.groupParticipantsUpdate(groupJid, [userJid], action);
+        await sock.sendMessage(groupJid, {
+            text: `👑 ${action === 'promote' ? 'Promoted' : 'Demoted'} ${phone}`
         });
-      }
-    }
-  }
-
-  // ==================== Command Handlers ====================
-  private async addMember(sock: WASocket, groupJid: string, phone: string) {
-    await sock.groupParticipantsUpdate(
-      groupJid, 
-      [`${phone.replace(/[^0-9]/g, '')}@s.whatsapp.net`], 
-      'add'
-    );
-    await sock.sendMessage(groupJid, { text: `✅ Added ${phone}` });
-  }
-
-  private async toggleAntiLink(sock: WASocket, groupJid: string) {
-    const settings = this.getGroupSettings(groupJid);
-    settings.antiLink = !settings.antiLink;
-    await sock.sendMessage(groupJid, {
-      text: `🔗 Anti-Link ${settings.antiLink ? 'ENABLED' : 'DISABLED'}`
-    });
-  }
-
-  private async setWelcomeMessage(sock: WASocket, groupJid: string, text: string) {
-    const settings = this.getGroupSettings(groupJid);
-    settings.welcomeMessage = text;
-    await sock.sendMessage(groupJid, {
-      text: `🎉 Welcome message set:\n"${text}"`
-    });
-  }
-
-  // ==================== Event Handlers ====================
-  async handleMessages(sock: WASocket, msg: WAMessage) {
-    if (!msg.key.remoteJid?.endsWith('@g.us')) return;
-
-    const groupJid = msg.key.remoteJid;
-    const settings = this.getGroupSettings(groupJid);
-
-    // Anti-Link Check
-    if (settings.antiLink) {
-      await this.checkLinks(sock, msg);
     }
 
-    // Welcome New Members
-    if (msg.message?.protocolMessage?.type === WAProto.ProtocolMessage.ProtocolMessageType.GROUP_PARTICIPANT_ADD) {
-      await this.sendWelcome(sock, msg);
+    async _setGroupLock(sock, groupJid, locked) {
+        await sock.groupSettingUpdate(groupJid, locked ? 'announcement' : 'not_announcement');
+        await sock.sendMessage(groupJid, { text: `🔒 Group ${locked ? 'locked' : 'unlocked'}` });
+    }
+
+    async _setDescription(sock, groupJid, text) {
+        await sock.groupUpdateDescription(groupJid, text);
+        await sock.sendMessage(groupJid, { text: '📝 Description updated' });
+    }
+
+    async _setGroupName(sock, groupJid, name) {
+        await sock.groupUpdateSubject(groupJid, name);
+        await sock.sendMessage(groupJid, { text: `🏷️ Group renamed to "${name}"` });
+    }
+
+    async _toggleSetting(sock, groupJid, setting) {
+        const settings = this.groupSettings.get(groupJid) || {};
+        settings[setting] = !settings[setting];
+        this.groupSettings.set(groupJid, settings);
+        await sock.sendMessage(groupJid, {
+            text: `⚙️ ${setting.replace('anti', '').toUpperCase()} ${settings[setting] ? 'ON' : 'OFF'}`
+        });
+    }
+
+    async _listAdmins(sock, groupJid) {
+        const metadata = await this._getGroupMetadata(sock, groupJid);
+        const admins = metadata.participants.filter(p => p.admin).map(p => p.id.split('@')[0]);
+        await sock.sendMessage(groupJid, {
+            text: `👑 Admins:\n${admins.map(a => `• ${a}`).join('\n')}`
+        });
+    }
+
+    async _listMembers(sock, groupJid) {
+        const metadata = await this._getGroupMetadata(sock, groupJid);
+        const members = metadata.participants.map(p => p.id.split('@')[0]);
+        await sock.sendMessage(groupJid, {
+            text: `👥 Members (${members.length}):\n${members.map(m => `• ${m}`).join('\n')}`
+        });
+    }
+
+    async _mentionAll(sock, groupJid) {
+        const metadata = await this._getGroupMetadata(sock, groupJid);
+        await sock.sendMessage(groupJid, {
+            text: '📢 @everyone',
+            mentions: metadata.participants.map(p => p.id)
+        });
+    }
+
+    async _setWelcomeMessage(sock, groupJid, text) {
+        const settings = this.groupSettings.get(groupJid) || {};
+        settings.welcomeMsg = text;
+        this.groupSettings.set(groupJid, settings);
+        await sock.sendMessage(groupJid, { text: '🎉 Welcome message set!' });
+    }
+
+    async _getGroupMetadata(sock, groupJid) {
+        if (!this.metadataCache.has(groupJid)) {
+            this.metadataCache.set(groupJid, await sock.groupMetadata(groupJid));
+        }
+        return this.metadataCache.get(groupJid);
     }
   }
-
-  private async checkLinks(sock: WASocket, msg: WAMessage) {
-    const groupJid = msg.key.remoteJid!;
-    const text = msg.message?.conversation || msg.message?.extendedTextMessage?.text || '';
-    
-    if (/(https?:\/\/[^\s]+)/g.test(text)) {
-      await sock.sendMessage(groupJid, { delete: msg.key });
-      await sock.sendMessage(groupJid, {
-        text: `⚠️ @${msg.key.participant?.split('@')[0]} - Links forbidden!`,
-        mentions: [msg.key.participant!]
-      });
-    }
-  }
-
-  private async sendWelcome(sock: WASocket, msg: WAMessage) {
-    const groupJid = msg.key.remoteJid!;
-    const settings = this.getGroupSettings(groupJid);
-    
-    if (settings.welcomeMessage) {
-      const newMembers = msg.message?.protocolMessage?.groupParticipantAdd?.participants || [];
-      await sock.sendMessage(groupJid, {
-        text: `👋 Welcome ${newMembers.map(m => `@${m.split('@')[0]}`).join(' ')}!\n${settings.welcomeMessage}`,
-        mentions: newMembers
-      });
-    }
-  }
-
-  // ==================== Helpers ====================
-  private getGroupSettings(groupJid: string) {
-    if (!this.groupSettings.has(groupJid)) {
-      this.groupSettings.set(groupJid, { 
-        antiLink: false, 
-        antiDelete: false 
-      });
-    }
-    return this.groupSettings.get(groupJid)!;
-  }
-}
-
-// Singleton instance
-export default new GroupManager();
