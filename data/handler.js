@@ -6,7 +6,7 @@ import { smsg } from '../lib/myfunc.cjs';
 import { handleAntilink } from './antilink.js';
 import { fileURLToPath } from 'url';
 import { shengChat, shengCommand } from '../lib/shengMode.js'; // Integrated Sheng AI
-import GroupManager from './groupmanager'; // Import GroupManager
+import GroupManager from '../plugins/groupmanager.js'; // Import GroupManager
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
