@@ -163,48 +163,39 @@ async function start() {
             }
         });
 
-// Auto Like Status
-sock.ev.on('messages.upsert', async ({ messages }) => {
-    try {
-        const mek = messages[0];
-        if (!mek || !mek.message) return;
+        // Auto Like Status - FIXED VERSION
+        Matrix.ev.on('messages.upsert', async ({ messages }) => {
+            try {
+                const mek = messages[0];
+                if (!mek || !mek.message) return;
 
-        // Extract content type (handles ephemeral messages)
-        const contentType = getContentType(mek.message);
-        mek.message = (contentType === 'ephemeralMessage') 
-            ? mek.message.ephemeralMessage.message 
-            : mek.message;
+                const contentType = getContentType(mek.message);
+                mek.message = (contentType === 'ephemeralMessage') 
+                    ? mek.message.ephemeralMessage.message 
+                    : mek.message;
 
-        // Check if it's a status and auto-react is enabled
-        if (mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_REACT === "true") {
-            const senderJid = sock.decodeJid(mek.key.participant || mek.key.remoteJid); // Fix: Use sock.decodeJid
-            const botJid = sock.decodeJid(sock.user.id); // Your bot's JID
+                if (mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_REACT === "true") {
+                    const emojiList = [
+                        '🦖', '💸', '💨', '🦮', '🐕‍🦺', '💯', '🔥', '💫', '💎', '⚡',
+                        '🤍', '🖤', '👀', '🙌', '🙆', '🚩', '💻', '🤖', '😎', '🤎',
+                        '✅', '🫀', '🧡', '😁', '😄', '🔔', '👌', '💥', '⛅', '🌟',
+                        '🗿', '🇵🇰', '💜', '💙', '🌝', '💚'
+                    ];
+                    const randomEmoji = emojiList[Math.floor(Math.random() * emojiList.length)];
 
-            // List of random emojis (customize as needed)
-            const emojiList = [
-                '🦖', '💸', '💨', '🦮', '🐕‍🦺', '💯', '🔥', '💫', '💎', '⚡', 
-                '🤍', '🖤', '👀', '🙌', '🙆', '🚩', '💻', '🤖', '😎', '🤎', 
-                '✅', '🫀', '🧡', '😁', '😄', '🔔', '👌', '💥', '⛅', '🌟', 
-                '🗿', '🇵🇰', '💜', '💙', '🌝', '💚'
-            ];
+                    await Matrix.sendMessage(mek.key.remoteJid, {
+                        react: {
+                            text: randomEmoji,
+                            key: mek.key,
+                        }
+                    });
 
-            // Pick a random emoji
-            const randomEmoji = emojiList[Math.floor(Math.random() * emojiList.length)];
-
-            // Send reaction
-            await sock.sendMessage(mek.key.remoteJid, {
-                react: {
-                    text: randomEmoji,
-                    key: mek.key,
+                    console.log(`Auto-reacted to status with: ${randomEmoji}`);
                 }
-            });
-
-            console.log(`Auto-reacted to status from ${senderJid} with: ${randomEmoji}`);
-        }
-    } catch (err) {
-        console.error("Auto Like Status Error:", err);
-    }
-});
+            } catch (err) {
+                console.error("Auto Like Status Error:", err);
+            }
+        });
 
     } catch (error) {
         console.error('Critical Error:', error);
