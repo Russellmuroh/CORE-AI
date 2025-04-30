@@ -1,62 +1,50 @@
 import config from '../config.cjs';
 import { format, formatDistanceToNow } from 'date-fns';
 
-// Juice WRLD short quotes
 const juiceQuotes = [
   "999 forever 🦋",
-  "No drugs, just love 💊",
-  "Legends never die 🌙",
   "Demons in my head 😈",
-  "Empty thoughts 🌀",
-  "Too much pride 🏆",
-  "Addictions hurt 🩹",
-  "Love & pain ✨"
+  "Legends never die 🌙",
+  "Empty thoughts 🌀"
 ];
 
 let startTime = new Date();
 let bioInterval;
 
 const updateBio = async (Matrix) => {
-  if (!config.AUTO_BIO) return;
-
-  const runtime = formatDistanceToNow(startTime, { includeSeconds: true });
-  const currentDate = format(new Date(), 'MMM dd, yyyy');
-  const randomQuote = juiceQuotes[Math.floor(Math.random() * juiceQuotes.length)];
-
-  const bioText = `${randomQuote}\n⏳ ${runtime} | 📅 ${currentDate}`;
-
   try {
-    await Matrix.updateProfileStatus(bioText);
-    console.log('Bio updated:', bioText);
+    const runtime = formatDistanceToNow(startTime);
+    const dateStr = format(new Date(), 'MMM dd, yyyy');
+    const quote = juiceQuotes[Math.floor(Math.random() * juiceQuotes.length)];
+    
+    await Matrix.updateProfileStatus(`${quote}\n⏱️ ${runtime} | 📅 ${dateStr}`);
+    console.log('Bio updated');
   } catch (error) {
     console.error('Bio update failed:', error);
   }
 };
 
 const autobioCommand = async (m, Matrix) => {
-  const botNumber = await Matrix.decodeJid(Matrix.user.id);
-  const isCreator = [botNumber, config.OWNER_NUMBER + '@s.whatsapp.net'].includes(m.sender);
-  const command = m.body.trim().toLowerCase();
+  const allowedUsers = [
+    await Matrix.decodeJid(Matrix.user.id), // Bot
+    config.OWNER_NUMBER + '@s.whatsapp.net' // Owner
+  ];
 
-  if (command === 'autobio on' || command === 'autobio off') {
-    if (!isCreator) return m.reply("*🚫 OWNER ONLY*");
+  if (!m.body.toLowerCase().startsWith('autobio')) return;
+  if (!allowedUsers.includes(m.sender)) return;
 
-    config.AUTO_BIO = command === 'autobio on';
-    
-    if (config.AUTO_BIO) {
-      // Initial update
-      await updateBio(Matrix);
-      // Set interval for updates (every 30 minutes)
-      bioInterval = setInterval(() => updateBio(Matrix), 30 * 60 * 1000);
-      await Matrix.sendMessage(m.from, { 
-        text: "✨ Auto-Bio ACTIVATED\nNew Juice WRLD bio every 30 minutes" 
-      }, { quoted: m });
-    } else {
-      clearInterval(bioInterval);
-      await Matrix.sendMessage(m.from, { 
-        text: "🚫 Auto-Bio DEACTIVATED" 
-      }, { quoted: m });
-    }
+  const command = m.body.toLowerCase().split(' ')[1];
+
+  if (command === 'on') {
+    config.AUTO_BIO = true;
+    await updateBio(Matrix);
+    bioInterval = setInterval(() => updateBio(Matrix), 30 * 60 * 1000);
+    await m.reply("✨ Auto-Bio ACTIVATED");
+  } 
+  else if (command === 'off') {
+    config.AUTO_BIO = false;
+    clearInterval(bioInterval);
+    await m.reply("🚫 Auto-Bio DEACTIVATED");
   }
 };
 
