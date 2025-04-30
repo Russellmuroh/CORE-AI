@@ -1,77 +1,70 @@
-import { WAMessage, WASocket } from '@whiskeysockets/baileys';
+import baileys from '@whiskeysockets/baileys';
+const { WAMessage, WASocket } = baileys;
 
 export default class GroupManager {
     constructor() {
-        this.groupSettings = new Map(); // Stores { antiLink, antiDelete, welcomeMsg }
-        this.metadataCache = new Map(); // Caches group metadata
-        this.commands = [
-            'add', 'kick', 'promote', 'demote',
-            'open', 'close', 'setdesc', 'setname', 'antilink', 'antidelete',
-            'listadmins', 'listmembers', 'tagall', 'setwelcome'
-        ];
+        this.groupSettings = new Map(); // { antiLink: bool, welcomeMsg: string }
+        this.metadataCache = new Map();
+        this.triggerWords = new Map(); // { groupJid: [{word: string, response: string}]}
     }
 
-    async handleCommand(sock, m, { isAdmin, isBotAdmin }) {
+    async handleCommand(sock, m, { isAdmin, isBotAdmin, prefix }) {
         if (!m.isGroup || !isAdmin) return;
 
-        const messageText = m.body.toLowerCase().trim();  // Convert message to lowercase
-
-        // Check if the message contains any command
-        const command = this.commands.find(cmd => messageText.includes(cmd));
-
-        if (!command) return;  // If no command found, do nothing
-
-        const args = messageText.slice(command.length).trim().split(' ');  // Get arguments after the command
-        const content = args.join(' ').trim();  // Join remaining arguments
+        const [cmd, ...args] = m.body.slice(prefix.length).split(' ');
+        const content = args.join(' ').trim();
 
         try {
             // Member Management
-            if (command === 'add') {
+            if (cmd === 'add') {
                 if (!isBotAdmin) throw new Error('Bot needs admin rights');
                 await this._addMember(sock, m.from, content);
             }
-            else if (command === 'kick') {
+            else if (cmd === 'kick') {
                 await this._removeMember(sock, m.from, content);
             }
-            else if (command === 'promote') {
+            else if (cmd === 'promote') {
                 await this._changeAdmin(sock, m.from, content, 'promote');
             }
-            else if (command === 'demote') {
+            else if (cmd === 'demote') {
                 await this._changeAdmin(sock, m.from, content, 'demote');
             }
 
             // Group Settings
-            else if (command === 'open') {
+            else if (cmd === 'open') {
                 await this._setGroupLock(sock, m.from, false);
             }
-            else if (command === 'close') {
+            else if (cmd === 'close') {
                 await this._setGroupLock(sock, m.from, true);
             }
-            else if (command === 'setdesc') {
+            else if (cmd === 'setdesc') {
                 await this._setDescription(sock, m.from, content);
             }
-            else if (command === 'setname') {
+            else if (cmd === 'setname') {
                 await this._setGroupName(sock, m.from, content);
             }
-            else if (command === 'antilink') {
+            else if (cmd === 'antilink') {
                 await this._toggleSetting(sock, m.from, 'antiLink');
             }
-            else if (command === 'antidelete') {
+            else if (cmd === 'antidelete') {
                 await this._toggleSetting(sock, m.from, 'antiDelete');
             }
 
             // Utilities
-            else if (command === 'listadmins') {
+            else if (cmd === 'listadmins') {
                 await this._listAdmins(sock, m.from);
             }
-            else if (command === 'listmembers') {
+            else if (cmd === 'listmembers') {
                 await this._listMembers(sock, m.from);
             }
-            else if (command === 'tagall') {
+            else if (cmd === 'tagall') {
                 await this._mentionAll(sock, m.from);
             }
-            else if (command === 'setwelcome') {
+            else if (cmd === 'setwelcome') {
                 await this._setWelcomeMessage(sock, m.from, content);
+            }
+            else if (cmd === 'settrigger') {
+                await this._setTriggerWord(sock, m.from, args[0], args.slice(1).join(' '));
             }
             else {
                 throw new Error('Unknown command');
@@ -80,6 +73,24 @@ export default class GroupManager {
         } catch (error) {
             await sock.sendMessage(m.from, { text: `❌ Error: ${error.message}` });
         }
+    }
+
+    async checkTriggers(sock, m) {
+        if (!this.triggerWords.has(m.from)) return false;
+        
+        const triggers = this.triggerWords.get(m.from);
+        const trigger = triggers.find(t => 
+            m.body.toLowerCase().includes(t.word.toLowerCase())
+        );
+
+        if (trigger) {
+            await sock.sendMessage(m.from, {
+                text: trigger.response.replace('@user', `@${m.sender.split('@')[0]}`),
+                mentions: [m.sender]
+            });
+            return true;
+        }
+        return false;
     }
 
     async handleMessages(sock, m) {
@@ -181,10 +192,20 @@ export default class GroupManager {
         await sock.sendMessage(groupJid, { text: '🎉 Welcome message set!' });
     }
 
+    async _setTriggerWord(sock, groupJid, word, response) {
+        if (!word || !response) throw new Error('Usage: /settrigger [word] [response]');
+        const triggers = this.triggerWords.get(groupJid) || [];
+        triggers.push({ word: word.toLowerCase(), response });
+        this.triggerWords.set(groupJid, triggers);
+        await sock.sendMessage(groupJid, {
+            text: `🔔 New trigger: When someone says "${word}", I'll respond with:\n"${response}"`
+        });
+    }
+
     async _getGroupMetadata(sock, groupJid) {
         if (!this.metadataCache.has(groupJid)) {
             this.metadataCache.set(groupJid, await sock.groupMetadata(groupJid));
         }
         return this.metadataCache.get(groupJid);
     }
-  }
+    }
