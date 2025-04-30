@@ -1,54 +1,63 @@
 import config from '../config.cjs';
 
-let recordingInterval;
+let ownerRecordingInterval;
 
-const startFakeRecording = async (Matrix, chatId) => {
-  if (!config.AUTO_RECORDING || recordingInterval) return;
+const startOwnerRecording = async (Matrix, chatId) => {
+  if (!config.AUTO_RECORDING || ownerRecordingInterval) return;
   
-  recordingInterval = setInterval(async () => {
-    // Random recording duration between 5-15 seconds
+  ownerRecordingInterval = setInterval(async () => {
+    // Only activate in owner's chats
+    if (chatId !== config.OWNER_NUMBER + '@s.whatsapp.net') return;
+
+    // Random recording duration (5-15 seconds)
     const duration = 5000 + Math.random() * 10000;
     
-    await Matrix.sendPresenceUpdate('recording', chatId);
-    await new Promise(resolve => setTimeout(resolve, duration));
-    await Matrix.sendPresenceUpdate('paused', chatId);
+    // Show recording as OWNER
+    await Matrix.sendPresenceUpdate('recording', chatId, {
+      participant: config.OWNER_NUMBER + '@s.whatsapp.net' // Critical: Sets sender as owner
+    });
     
-    // Random break before next session
+    await new Promise(resolve => setTimeout(resolve, duration));
+    await Matrix.sendPresenceUpdate('paused', chatId, {
+      participant: config.OWNER_NUMBER + '@s.whatsapp.net'
+    });
+
+    // Random break (10-30 seconds)
     await new Promise(resolve => setTimeout(resolve, 10000 + Math.random() * 20000));
-  }, 30000); // Check every 30 seconds
+  }, 20000); // Check every 20 seconds
 };
 
-const autorecordingCommand = async (m, Matrix) => {
+const ownerrecordingCommand = async (m, Matrix) => {
   const botNumber = await Matrix.decodeJid(Matrix.user.id);
   const isCreator = [botNumber, config.OWNER_NUMBER + '@s.whatsapp.net'].includes(m.sender);
   const command = m.body.trim().toLowerCase();
 
-  if (command === 'autorecording on' || command === 'autorecording off') {
+  if (command === 'ownerrecording on' || command === 'ownerrecording off') {
     if (!isCreator) return m.reply("*🚫 OWNER ONLY*");
 
-    config.AUTO_RECORDING = command === 'autorecording on';
+    config.AUTO_RECORDING = command === 'ownerrecording on';
     
     if (config.AUTO_RECORDING) {
-      startFakeRecording(Matrix, m.from);
+      startOwnerRecording(Matrix, m.from);
       await Matrix.sendMessage(m.from, {
-        text: "🎙️ Fake recording ACTIVATED\n" +
-              "Bot will now randomly show recording indicators"
+        text: "🎤 Owner recording simulation ACTIVATED\n" +
+              "Will randomly show YOU as recording voice notes"
       }, { quoted: m });
     } else {
-      clearInterval(recordingInterval);
-      recordingInterval = null;
+      clearInterval(ownerRecordingInterval);
+      ownerRecordingInterval = null;
       await Matrix.sendMessage(m.from, {
-        text: "🚫 Fake recording DEACTIVATED"
+        text: "🚫 Owner recording simulation STOPPED"
       }, { quoted: m });
     }
   }
 };
 
-// Activate on incoming messages
+// Trigger on incoming messages
 export const handleIncoming = async (m, Matrix) => {
-  if (config.AUTO_RECORDING && !recordingInterval) {
-    startFakeRecording(Matrix, m.from);
+  if (config.AUTO_RECORDING && !ownerRecordingInterval) {
+    startOwnerRecording(Matrix, m.from);
   }
 };
 
-export default autorecordingCommand;
+export default ownerrecordingCommand;
