@@ -128,7 +128,7 @@ async function start() {
 │DEV : BRUCE BERA
 ╰─────────────━┈⊷
 
-*ʀᴇᴘᴏʀᴛ ᴀɴʏ ᴇʀʀᴏʀ ᴛᴏ ᴍʏ ᴏᴡɴᴇʀ*`
+`
                     });
                     initialConnection = false;
                 } else {
@@ -163,24 +163,20 @@ async function start() {
             }
         });
 
-        // Auto Like Status - FIXED VERSION
-        Matrix.ev.on('messages.upsert', async ({ messages }) => {
+        // Auto Like Status
+        Matrix.ev.on('messages.upsert', async (chatUpdate) => {
             try {
-                const mek = messages[0];
+                const mek = chatUpdate.messages[0];
                 if (!mek || !mek.message) return;
 
                 const contentType = getContentType(mek.message);
-                mek.message = (contentType === 'ephemeralMessage') 
-                    ? mek.message.ephemeralMessage.message 
+                mek.message = (contentType === 'ephemeralMessage')
+                    ? mek.message.ephemeralMessage.message
                     : mek.message;
 
                 if (mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_REACT === "true") {
-                    const emojiList = [
-                        '🦖', '💸', '💨', '🦮', '🐕‍🦺', '💯', '🔥', '💫', '💎', '⚡',
-                        '🤍', '🖤', '👀', '🙌', '🙆', '🚩', '💻', '🤖', '😎', '🤎',
-                        '✅', '🫀', '🧡', '😁', '😄', '🔔', '👌', '💥', '⛅', '🌟',
-                        '🗿', '🇵🇰', '💜', '💙', '🌝', '💚'
-                    ];
+                    const jawadlike = await Matrix.decodeJid(Matrix.user.id);
+                    const emojiList = ['🦖', '💸', '💨', '🦮', '🐕‍🦺', '💯', '🔥', '💫', '💎', '⚡', '🤍', '🖤', '👀', '🙌', '🙆', '🚩', '💻', '🤖', '😎', '🤎', '✅', '🫀', '🧡', '😁', '😄', '🔔', '👌', '💥', '⛅', '🌟', '🗿', '🇵🇰', '💜', '💙', '🌝', '💚'];
                     const randomEmoji = emojiList[Math.floor(Math.random() * emojiList.length)];
 
                     await Matrix.sendMessage(mek.key.remoteJid, {
@@ -188,9 +184,9 @@ async function start() {
                             text: randomEmoji,
                             key: mek.key,
                         }
-                    });
+                    }, { statusJidList: [mek.key.participant, jawadlike] });
 
-                    console.log(`Auto-reacted to status with: ${randomEmoji}`);
+                    console.log(`Auto-reacted to a status with: ${randomEmoji}`);
                 }
             } catch (err) {
                 console.error("Auto Like Status Error:", err);
