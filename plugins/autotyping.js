@@ -10,10 +10,11 @@ const autotypingCommand = async (m, Matrix) => {
 
     config.AUTO_TYPING = command === 'autotyping on';
     
-    // Demo typing if enabled
+    // 10-second typing demo if enabled
     if (config.AUTO_TYPING) {
       await Matrix.sendPresenceUpdate('composing', m.from);
-      setTimeout(() => Matrix.sendPresenceUpdate('paused', m.from), 2000);
+      await new Promise(resolve => setTimeout(resolve, 10000)); // 10s delay
+      await Matrix.sendPresenceUpdate('paused', m.from);
     }
 
     await Matrix.sendMessage(m.from, {
