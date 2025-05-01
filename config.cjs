@@ -5,7 +5,6 @@ const config = {
   SESSION_ID: process.env.SESSION_ID || "",
   PREFIX: process.env.PREFIX || '.',
   AUTO_STATUS_SEEN: process.env.AUTO_STATUS_SEEN !== undefined ? process.env.AUTO_STATUS_SEEN === 'true' : true,
-   //make true if you want auto reply on status 
   AUTO_STATUS_REACT: process.env.AUTO_STATUS_REACT || "true",
   AUTO_STATUS_REPLY: process.env.AUTO_STATUS_REPLY !== undefined ? process.env.AUTO_STATUS_REPLY === 'true' : true,
   STATUS_READ_MSG: process.env.STATUS_READ_MSG || '✅ Auto Status Seen Bot',
@@ -21,13 +20,15 @@ const config = {
   AUTO_BIO: process.env.AUTO_BIO !== undefined ? process.env.AUTO_BIO === 'true' : false,
   ANTI_DELETE: process.env.ANTI_DELETE !== undefined ? process.env.ANTI_DELETE === 'true' : true,
   DELETE_PATH: process.env.DELETE_PATH || "pm",
-  BLOCKED_PREFIXES: process.env.BLOCKED_PREFIXES ? process.env.BLOCKED_PREFIXES.split(',') : ['44', '1', '91'],
+  BLOCKED_PREFIXES: process.env.BLOCKED_PREFIXES ? process.env.BLOCKED_PREFIXES.split(',') : ['44', '212', '91'],
   OWNER_REACT: process.env.OWNER_REACT !== undefined ? process.env.OWNER_REACT === 'true' : false,
   REJECT_CALL: process.env.REJECT_CALL !== undefined ? process.env.REJECT_CALL === 'true' : false,
   NOT_ALLOW: process.env.NOT_ALLOW !== undefined ? process.env.NOT_ALLOW === 'true' : true,
   MODE: process.env.MODE || "public",
   OWNER_NAME: process.env.OWNER_NAME || "Bera",
   OWNER_NUMBER: process.env.OWNER_NUMBER || "254743982206",
+  BOT_NAME: process.env.BOT_NAME || "CLOUD ☁️ AI",
+
   GEMINI_KEY: process.env.GEMINI_KEY || "YOUR_KEY_HERE",
   WELCOME: process.env.WELCOME !== undefined ? process.env.WELCOME === 'true' : false,
 
@@ -35,6 +36,11 @@ const config = {
   PLUGIN_LOG: process.env.PLUGIN_LOG !== undefined ? process.env.PLUGIN_LOG === 'true' : true,
   PLUGIN_SUCCESS_EMOJI: process.env.PLUGIN_SUCCESS_EMOJI || '✔',
   PLUGIN_FAIL_EMOJI: process.env.PLUGIN_FAIL_EMOJI || '❌',
+
+  // Update System
+  PM2_NAME: process.env.PM2_NAME || 'CORE-AI',
+  BRANCH: process.env.BRANCH || 'main',
+  GITHUB_REPO: process.env.GITHUB_REPO || 'PRO-DEVELOPER-1/CORE-AI',
 };
 
 module.exports = config;
