@@ -1,23 +1,40 @@
-import fetch from 'node-fetch';
+import axios from 'axios';
 import config from '../../config.cjs';
 
 const animeQuote = async (m, sock) => {
-  const text = m.body?.trim();
-  const triggers = ['animequotes', 'animequote', 'aq']; // Added multiple trigger words
-  const match = triggers.find(trigger => text.toLowerCase().startsWith(trigger));
+  const triggers = ['animequote', 'aq'];
+  const match = triggers.find(trigger => m.body?.toLowerCase().startsWith(trigger));
 
   if (match) {
     try {
-      const res = await fetch('https://some-random-api.com/animu/quote');
-      if (!res.ok) throw await res.text();
-      const json = await res.json();
-      const { sentence, character, anime } = json;
+      // Try AnimeChan API first (free)
+      const { data } = await axios.get('https://animechan.xyz/api/random');
+      
+      await sock.sendMessage(m.from, {
+        text: `🎌 *${data.anime}* (${data.character})\n\n"${data.quote}"`,
+        footer: `Powered by ${config.BOT_NAME}`,
+        mentions: [m.sender]
+      }, { quoted: m });
 
-      const message = `❖𝐐𝐔𝐎𝐓𝐄\n${sentence}\n\n❖𝐂𝐇𝐀𝐑𝐀𝐂𝐓𝐄𝐑: \`\`\`${character}\`\`\`\n❖𝐀𝐍𝐈𝐌𝐄: \`\`\`${anime}\`\`\`\n`;
-      await sock.sendMessage(m.from, { text: message }, { quoted: m });
     } catch (error) {
-      console.error(error);
-      await sock.sendMessage(m.from, { text: "❌ Failed to fetch anime quote. Please try again later." }, { quoted: m });
+      // Fallback to ZenQuotes API if AnimeChan fails
+      try {
+        const { data } = await axios.get('https://animechan.xyz/api/random');
+        const quote = data[0].q;
+        const character = data[0].a;
+        
+        await sock.sendMessage(m.from, {
+          text: `🎌 Random Anime Quote\n\n"${quote}"\n\n- ${character}`,
+          footer: `Fallback API | ${config.BOT_NAME}`,
+          mentions: [m.sender]
+        }, { quoted: m });
+
+      } catch (err) {
+        await sock.sendMessage(m.from, {
+          text: '❌ Failed to fetch quotes. Try again later!',
+          mentions: [m.sender]
+        }, { quoted: m });
+      }
     }
   }
 };
