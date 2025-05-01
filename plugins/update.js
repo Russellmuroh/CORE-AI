@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import config from './config.cjs';
+import config from './config.js';
 
 async function handleUpdate(m, conn) {
   const text = m.text?.toLowerCase();
