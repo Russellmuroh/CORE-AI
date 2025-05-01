@@ -10,6 +10,7 @@ import {
     getContentType
 } from '@whiskeysockets/baileys';
 import { Handler, Callupdate, GroupUpdate } from './data/index.js';
+import updateHandler from '../plugins/update.js'  // Adjust if file is named differently
 import express from 'express';
 import pino from 'pino';
 import fs from 'fs';
