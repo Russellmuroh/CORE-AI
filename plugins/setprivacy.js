@@ -1,92 +1,45 @@
-import pkg from '@shizodevs/shizoweb';
-const { WA_DEFAULT_EPHEMERAL } = pkg;
+import { WA_DEFAULT_EPHEMERAL } from '@whiskeysockets/baileys';
+import { privacyUtils } from '@shizodevs/shizoweb';
 
-const privacySettings = async (m, sock) => {
-  const text = m.body?.trim();
-  const triggers = ['privacy', 'setprivacy', 'privacysettings']; // Multiple trigger words
-  const match = triggers.find(trigger => text.toLowerCase().startsWith(trigger));
+const privacyHandler = async (m, sock) => {
+  const triggers = ['privacy', 'setpriv'];
+  if (!triggers.some(t => m.text.startsWith(t))) return;
 
-  if (match) {
-    const validValues = {
-      lastseen: ['all', 'contacts', 'contact_blacklist', 'none'],
-      online: ['all', 'match_last_seen'],
-      picture: ['all', 'contacts', 'contact_blacklist', 'none'],
-      status: ['all', 'contacts', 'contact_blacklist', 'none'],
-      readreceipts: ['all', 'none'],
-      groupsadd: ['all', 'contacts', 'contact_blacklist', 'none'],
-      disappearingmode: [WA_DEFAULT_EPHEMERAL, 0, 86400, 604800, 7776000],
+  try {
+    const [, type, value] = m.text.split(' ');
+    
+    // Supported privacy types
+    const privacyMap = {
+      lastseen: ['all', 'contacts', 'none'],
+      profile: ['all', 'contacts', 'none'],
+      status: ['all', 'contacts', 'none'],
+      groupadd: ['all', 'contacts', 'none'],
+      disappear: [WA_DEFAULT_EPHEMERAL, 86400, 604800] // 24h, 7d
     };
 
-    const args = text.slice(match.length).trim().split(/\s+/);
-    const typeNumber = parseInt(args[0]);
-    const valueNumber = parseInt(args[1]);
-
-    const typeKeys = Object.keys(validValues);
-
-    // Help message with trigger word examples
-    const privacyTypes = typeKeys
-      .map((type, index) => `${index + 1}. ${type}`)
-      .join('\n');
-    const helpMessage = 
-      `🔒 *Privacy Settings*\n\n` +
-      `Usage: _${triggers[0]} [type_number] [value_number]_\n\n` +
-      `Example: _privacy 1 2_\n\n` +
-      'Available Types:\n' +
-      privacyTypes;
-
-    if (!typeNumber || isNaN(typeNumber) || typeNumber < 1 || typeNumber > typeKeys.length) {
-      await sock.sendMessage(m.from, { text: helpMessage }, { quoted: m });
-      return;
+    if (!type || !privacyMap[type]) {
+      return sock.sendMessage(m.from, {
+        text: `📛 Invalid type! Available:\n${Object.keys(privacyMap).join('\n')}`
+      }, { quoted: m });
     }
 
-    const selectedType = typeKeys[typeNumber - 1];
-    const validTypeValues = validValues[selectedType];
-
-    const validTypeValuesList = validTypeValues
-      .map((val, index) => `${index + 1}. ${val}`)
-      .join('\n');
-    const typeHelpMessage = 
-      `🔧 ${selectedType.toUpperCase()} Options:\n\n` +
-      validTypeValuesList +
-      `\n\nExample: _${triggers[0]} ${typeNumber} 2_`;
-
-    if (!valueNumber || isNaN(valueNumber) || valueNumber < 1 || valueNumber > validTypeValues.length) {
-      await sock.sendMessage(m.from, { text: typeHelpMessage }, { quoted: m });
-      return;
+    // Use ShizoWeb for advanced controls
+    if (type === 'disappear') {
+      await privacyUtils.setDisappearingMode(sock, value);
+    } else {
+      await sock.updatePrivacySettings(type, value);
     }
 
-    const selectedValue = validTypeValues[valueNumber - 1];
-    const privacyType = selectedType.charAt(0).toUpperCase() + selectedType.slice(1);
+    await sock.sendMessage(m.from, {
+      text: `✅ Privacy updated!\nType: ${type}\nValue: ${value}`
+    }, { quoted: m });
 
-    try {
-      // Map types to their corresponding functions
-      const privacyFunctions = {
-        lastseen: sock.updateLastSeenPrivacy,
-        online: sock.updateOnlinePrivacy,
-        picture: sock.updateProfilePicturePrivacy,
-        status: sock.updateStatusPrivacy,
-        readreceipts: sock.updateReadReceiptsPrivacy,
-        groupsadd: sock.updateGroupsAddPrivacy,
-        disappearingmode: sock.updateDefaultDisappearingMode
-      };
-
-      if (privacyFunctions[selectedType]) {
-        await privacyFunctions[selectedType](selectedValue);
-        await sock.sendMessage(
-          m.from,
-          { text: `✅ Privacy ${privacyType} updated to: ${selectedValue}` },
-          { quoted: m }
-        );
-      }
-    } catch (error) {
-      console.error('Privacy update error:', error);
-      await sock.sendMessage(
-        m.from,
-        { text: `❌ Failed to update ${privacyType} privacy` },
-        { quoted: m }
-      );
-    }
+  } catch (error) {
+    console.error('Privacy error:', error);
+    await sock.sendMessage(m.from, {
+      text: '❌ Failed to update privacy. Check console for details.'
+    }, { quoted: m });
   }
 };
 
-export default privacySettings;
+export default privacyHandler;
