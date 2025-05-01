@@ -21,10 +21,11 @@ import { smsg } from '../lib/myfunc.cjs';
 import { handleAntilink } from './antilink.js';
 import { fileURLToPath } from 'url';
 import { shengChat, shengCommand } from '../lib/shengMode.js'; // Integrated Sheng AI
-const { handleUpdate } = require('../plugins/updateCommand.js');
+// In your handler.js or main file:
+import { handleUpdate } from './plugins/updateCommand.js'
 
-// Inside your message handler:
-await handleUpdate(m, conn);
+// Inside message handler:
+await handleUpdate(m, conn)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
