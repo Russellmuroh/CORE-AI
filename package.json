@@ -1,25 +1,24 @@
 {
   "name": "CLOUD-AI",
   "version": "4.0.0",
-  "description": "Advanced WhatsApp Bot with TTS and Voice Features",
+  "description": "WhatsApp Bot",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "start": "pm2 start index.js --name CLOUD-AI --time --update-env",
     "stop": "pm2 stop CLOUD-AI",
     "restart": "pm2 restart CLOUD-AI --update-env",
-    "update": "npm install --save @whiskeysockets/baileys@6.5.1 ",
+    "update": "npm install --save @whiskeysockets/baileys@6.5.1",
     "dev": "NODE_ENV=development node index.js"
   },
   "dependencies": {
-  
     "@whiskeysockets/baileys": "6.5.1",
     "pino": "8.20.0",
     "pm2": "5.4.0",
-    "node-gtts": "2.0.2", 
-    "google-tts-api": "2.0.1", 
-    "@discordjs/opus": "0.9.0", 
-    "libsodium-wrappers": "0.7.11", 
+    "node-gtts": "2.0.2",
+    "google-tts-api": "2.0.1",
+    "@discordjs/opus": "0.9.0",
+    "libsodium-wrappers": "0.7.11",
     "@ffmpeg-installer/ffmpeg": "1.1.0",
     "@google/generative-ai": "0.9.0",
     "@hapi/boom": "10.0.1",
@@ -62,9 +61,9 @@
     "yt-search": "2.11.0",
     "form-data": "4.0.0",
     "lodash": "4.17.21",
-    "sharp": "0.33.2" 
+    "sharp": "0.33.2"
   },
   "engines": {
     "node": ">=18.x"
   }
-  }
+}
