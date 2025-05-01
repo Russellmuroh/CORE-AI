@@ -22,10 +22,7 @@ import { handleAntilink } from './antilink.js';
 import { fileURLToPath } from 'url';
 import { shengChat, shengCommand } from '../lib/shengMode.js'; // Integrated Sheng AI
 // In your handler.js or main file:
-import { handleUpdate } from './plugins/updateCommand.js'
 
-// Inside message handler:
-await handleUpdate(m, conn)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
