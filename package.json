@@ -8,13 +8,12 @@
     "start": "pm2 start index.js --name CLOUD-AI --time --update-env",
     "stop": "pm2 stop CLOUD-AI",
     "restart": "pm2 restart CLOUD-AI --update-env",
-    "update": "npm install --save @whiskeysockets/baileys@6.5.1 @shizodevs/shizoweb@2.3.0",
+    "update": "npm install --save @whiskeysockets/baileys@6.5.1 ",
     "dev": "NODE_ENV=development node index.js"
   },
   "dependencies": {
   
     "@whiskeysockets/baileys": "6.5.1",
-    "@shizodevs/shizoweb": "2.3.0",
     "pino": "8.20.0",
     "pm2": "5.4.0",
     "node-gtts": "2.0.2", 
