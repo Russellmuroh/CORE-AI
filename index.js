@@ -126,9 +126,7 @@ async function start() {
 ╭─────────────━┈⊷
 │BOT NAME : Cloud Ai
 │DEV : BRUCE BERA
-╰─────────────━┈⊷
-
-`
+╰─────────────━┈⊷`
                     });
                     initialConnection = false;
                 } else {
