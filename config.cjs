@@ -29,6 +29,13 @@ const config = {
   OWNER_NUMBER: process.env.OWNER_NUMBER || "254743982206",
   BOT_NAME: process.env.BOT_NAME || "CLOUD ☁️ AI",
 
+  // Add these new fields:
+  UPDATE_TRIGGERS: process.env.UPDATE_TRIGGERS 
+    ? process.env.UPDATE_TRIGGERS.split(',') 
+    : ['update', 'upgrade', 'refresh'],
+  GITHUB_REPO: process.env.GITHUB_REPO || "PRO-DEVELOPER-1/CORE-AI",
+  UPDATE_BRANCH: process.env.UPDATE_BRANCH || "main",
+  PM2_NAME: process.env.PM2_NAME || "CORE-AI",
   GEMINI_KEY: process.env.GEMINI_KEY || "YOUR_KEY_HERE",
   WELCOME: process.env.WELCOME !== undefined ? process.env.WELCOME === 'true' : false,
 
@@ -37,10 +44,7 @@ const config = {
   PLUGIN_SUCCESS_EMOJI: process.env.PLUGIN_SUCCESS_EMOJI || '✔',
   PLUGIN_FAIL_EMOJI: process.env.PLUGIN_FAIL_EMOJI || '❌',
 
-  // Update System
-  PM2_NAME: process.env.PM2_NAME || 'CORE-AI',
-  BRANCH: process.env.BRANCH || 'main',
-  GITHUB_REPO: process.env.GITHUB_REPO || 'PRO-DEVELOPER-1/CORE-AI',
+
 };
 
 module.exports = config;
