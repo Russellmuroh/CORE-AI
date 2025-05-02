@@ -27,15 +27,24 @@ async function getShengResponse(query) {
     }
 }
 
-export default async function shengAI(m, client) {
+async function handleShengAI(m, client) {
     try {
         const { body, from, sender, chat } = m;
-        const text = body?.toLowerCase()?.trim();
+        const text = body?.trim();
         
         if (!text) return;
 
+        // Case-insensitive trigger words
+        const triggerOn = ['shengai on', 'shengai activate', 'enable shengai'].some(trigger => 
+            text.toLowerCase().startsWith(trigger.toLowerCase())
+        );
+        
+        const triggerOff = ['shengai off', 'shengai deactivate', 'disable shengai'].some(trigger => 
+            text.toLowerCase().startsWith(trigger.toLowerCase())
+        );
+
         // Command handling
-        if (text === 'shengai on') {
+        if (triggerOn) {
             const isGroupAdmin = chat.isGroup ? await isAdmin(sender, chat, client) : true;
             const isOwner = sender === config.OWNER_NUMBER + '@s.whatsapp.net';
             
@@ -52,7 +61,7 @@ export default async function shengAI(m, client) {
             });
         }
 
-        if (text === 'shengai off') {
+        if (triggerOff) {
             enabledChats.delete(from);
             return client.sendMessage(from, { 
                 text: '❌ *ShengAI Disabled*\nKwaheri tuonane tena!'
@@ -60,17 +69,14 @@ export default async function shengAI(m, client) {
         }
 
         // Response logic
-        if (enabledChats.has(from) && 
-            !text.startsWith('!') && 
-            !text.startsWith('/') && 
-            !text.startsWith('.')) {
-            
-            if (cooldown.has(from)) {
-                return client.sendMessage(from, {
-                    text: '⏳ *Pole!* Niko busy... Try again in 5 seconds!'
-                });
+        if (enabledChats.has(from)) {
+            // Skip commands and short messages
+            if (text.startsWith('!') || text.startsWith('/') || text.startsWith('.') || text.length < 2) {
+                return;
             }
 
+            if (cooldown.has(from)) return;
+            
             cooldown.add(from);
             setTimeout(() => cooldown.delete(from), 5000);
 
@@ -79,8 +85,14 @@ export default async function shengAI(m, client) {
         }
     } catch (error) {
         console.error('ShengAI Error:', error);
-        await client.sendMessage(from, { 
-            text: '💢 *Error!* Nimekataa kufanya kazi kwa sasa.'
-        });
+        try {
+            await client.sendMessage(from, { 
+                text: '💢 *Error!* Nimekataa kufanya kazi kwa sasa.'
+            });
+        } catch (e) {
+            console.error('Failed to send error message:', e);
+        }
     }
-                }
+}
+
+export default handleShengAI;
